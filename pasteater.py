@@ -284,17 +284,23 @@ def hexbase_find(text):
         return True
     if '5456715141414d414241414141414141' in text:
         return True
-    if '54 56 71 51 41 41 4d 41 42 41 41 41 41 41 41 41' in text:
-        return True
     if '5456715141414D414241414141414141' in text:
+        return True
+    if '54 56 71 51 41 41 4d 41 42 41 41 41 41 41 41 41' in text:
         return True
     if '54 56 71 51 41 41 4D 41 42 41 41 41 41 41 41 41' in text:
         return True
 
 
-def write_file(text, filename):
-    if not os.path.exists(filename):
-        file = open(filename, 'w')
+def save_file(text, type, key):
+    print('%s: %s' % (type, key))
+    outfile = pastes_dir + key + "." + type
+    if not os.path.exists(outfile):
+        file = open(outfile, 'w')
+        file.write(text)
+        file.close()
+        rawfile = pastes_dir + 'origraw/' + key
+        file = open(rawfile, 'w')
         file.write(text)
         file.close()
         return
@@ -317,61 +323,73 @@ for paste in response:
     date = paste["date"]
     size = int(paste["size"])
     if (type == 'text' and size > 5000):
-        counter+=1
+        counter += 1
         url = paste["scrape_url"]
         r = requests.get(url)
-        if posh_find(r.content):
-            print("posh: " + key)
-            outfile = pastes_dir + key + '.posh'
-            write_file(r.content, outfile)
-            rawfile = pastes_dir + 'origraw/' + key
-            write_file(r.content, rawfile)
-            logfile.write('posh,%s,%s,%s,%s,%s\n' % (key,title,user,date,expire))
-            break
         if b64_find(r.content):
-            print("base64: " + key)
-            outfile = pastes_dir + key + '.b64'
-            write_file(r.content, outfile)
-            rawfile = pastes_dir + 'origraw/' + key
-            write_file(r.content, rawfile)
-            logfile.write('base64,%s,%s,%s,%s,%s\n' % (key,title,user,date,expire))
-            break
-        if doublebase_find(r.content):
-            print("doublebase: " + key)
-            outfile = pastes_dir + key + '.2xb64'
-            write_file(r.content, outfile)
-            rawfile = pastes_dir + 'origraw/' + key
-            write_file(r.content, rawfile)
-            logfile.write('doublebase,%s,%s,%s,%s,%s\n' % (key,title,user,date,expire))
+            type = "base64"
+            save_file(r.content, type, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
         if hex_find(r.content):
-            print("hex: " + key)
-            outfile = pastes_dir + key + '.hex'
-            write_file(r.content, outfile)
-            rawfile = pastes_dir + 'origraw/' + key
-            write_file(r.content, rawfile)
-            logfile.write('hex,%s,%s,%s,%s,%s\n' % (key,title,user,date,expire))
+            type = "hex"
+            save_file(r.content, type, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if bin_find(r.content):
+            type = "bin"
+            save_file(r.content, type, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
         if hexbase_find(r.content):
-            print("hexbase: " + key)
-            outfile = pastes_dir + key + '.hexbase'
-            write_file(r.content, outfile)
-            rawfile = pastes_dir + 'origraw/' + key
-            write_file(r.content, rawfile)
-            logfile.write('hexbase,%s,%s,%s,%s,%s\n' % (key,title,user,date,expire))
-        if bin_find(r.content):
-            print("binary: " + key)
-            outfile = pastes_dir + key + '.bin'
-            write_file(r.content, outfile)
-            rawfile = pastes_dir + 'origraw/' + key
-            write_file(r.content, rawfile)
-            logfile.write('bin,%s,%s,%s,%s,%s\n' % (key,title,user,date,expire))
+            type = "hexbase"
+            save_file(r.content, type, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
         if dec_find(r.content):
-            print("decimal: " + key)
-            outfile = pastes_dir + key + '.dec'
-            write_file(r.content, outfile)
-            rawfile = pastes_dir + 'origraw/' + key
-            write_file(r.content, rawfile)
-            logfile.write('dec,%s,%s,%s,%s,%s\n' % (key,title,user,date,expire))
+            type = "dec"
+            save_file(r.content, type, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if posh_find(r.content):
+            type = "posh"
+            save_file(r.content, type, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if doublebase_find(r.content):
+            type = "2xbase64"
+            save_file(r.content, type, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if b64_find(r.content[::-1]):
+            type = "base64"
+            save_file(r.content[::-1], type, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if hex_find(r.content[::-1]):
+            type = "hex"
+            save_file(r.content[::-1], type, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if bin_find(r.content[::-1]):
+            type = "bin"
+            save_file(r.content[::-1], type, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if hexbase_find(r.content[::-1]):
+            type = "hexbase"
+            save_file(r.content[::-1], type, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if dec_find(r.content[::-1]):
+            type = "dec"
+            save_file(r.content[::-1], type, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if doublebase_find(r.content[::-1]):
+            type = "2xbase64"
+            save_file(r.content[::-1], type, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
 
 print(counter)

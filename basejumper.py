@@ -144,7 +144,7 @@ for filename in binlist:
     write_file(bin, binout)
     os.remove(filename)
 
-ls = pastes_dir + '*.b64'
+ls = pastes_dir + '*.base64'
 baselist = glob.glob(ls)
 for filename in baselist:
   print filename
