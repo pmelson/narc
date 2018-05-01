@@ -1,6 +1,8 @@
 import requests
 import os
+import time
 
+start = time.time()
 url_pastebin_scraping = 'https://scrape.pastebin.com/api_scraping.php'
 limit = 250
 pastes_dir = '/home/ubuntu/pastes/'
@@ -292,6 +294,108 @@ def hexbase_find(text):
         return True
 
 
+def basehex_find(text):
+    if 'NGQ1YTkwMDAwMzAwMDAwMA' in text:
+        return True
+    if 'NEQ1QTkwMDAwMzAwMDAwMA' in text:
+        return True
+    if 'NGQ1YTUwMDAwMjAwMDAwMA' in text:
+        return True
+    if 'NEQ1QTUwMDAwMjAwMDAwMA' in text:
+        return True
+    if 'NGQ1YTAwMDAwMDAwMDAwMA' in text:
+        return True
+    if 'NEQ1QTAwMDAwMDAwMDAwMA' in text:
+        return True
+    if 'NGQ1YTQxNTI1NTQ4ODllNQ' in text:
+        return True
+    if 'NEQ1QTQxNTI1NTQ4ODlFNQ' in text:
+        return True
+    if 'NGQ1YTgwMDAwMTAwMDAwMA' in text:
+        return True
+    if 'NEQ1QTgwMDAwMTAwMDAwMA' in text:
+        return True
+    if 'NGQ1YTkwMDAwMzAwMDQwMA' in text:
+        return True
+    if 'NEQ1QTkwMDAwMzAwMDQwMA' in text:
+        return True
+    if 'NGQ1YWU4MDAwMDAwMDA1Yg' in text:
+        return True
+    if 'NEQ1QUU4MDAwMDAwMDA1Qg' in text:
+        return True
+    if 'NGQgNWEgOTAgMDAgMDMgMDAgMDQgMDA' in text:
+        return True
+    if 'NEQgNUEgOTAgMDAgMDMgMDAgMDQgMDA' in text:
+        return True
+    if 'NGQgNWEgZTggMDAgMDAgMDAgMDAgNWI' in text:
+        return True
+    if 'NEQgNUEgRTggMDAgMDAgMDAgMDAgNUI' in text:
+        return True
+    if 'NGQgNWEgOTAgMDAgMDMgMDAgMDAgMDA' in text:
+        return True
+    if 'NEQgNUEgOTAgMDAgMDMgMDAgMDAgMDA' in text:
+        return True
+    if 'NGQgNWEgNTAgMDAgMDIgMDAgMDAgMDA' in text:
+        return True
+    if 'NEQgNUEgNTAgMDAgMDIgMDAgMDAgMDA' in text:
+        return True
+    if 'NGQgNWEgMDAgMDAgMDAgMDAgMDAgMDA' in text:
+        return True
+    if 'NEQgNUEgMDAgMDAgMDAgMDAgMDAgMDA' in text:
+        return True
+    if 'NGQgNWEgNDEgNTIgNTUgNDggODkgZTU' in text:
+        return True
+    if 'NEQgNUEgNDEgNTIgNTUgNDggODkgRTU' in text:
+        return True
+    if 'NGQgNWEgODAgMDAgMDEgMDAgMDAgMDA' in text:
+        return True
+    if 'NEQgNUEgODAgMDAgMDEgMDAgMDAgMDA' in text:
+        return True
+    if 'NGQgNWEgOTAgMDAgMDMgMDAgMDQgMDA' in text:
+        return True
+    if 'NEQgNUEgOTAgMDAgMDMgMDAgMDQgMDA' in text:
+        return True
+    if 'NGQgNWEgZTggMDAgMDAgMDAgMDAgNWI' in text:
+        return True
+    if 'NEQgNUEgRTggMDAgMDAgMDAgMDAgNUI' in text:
+        return True
+    if 'MHg0ZCwweDVhLDB4OTAsMHgwMCwweDAzLDB4MDAsMHgwNCwweDAwCg' in text:
+        return True
+    if 'MHg0RCwweDVBLDB4OTAsMHgwMCwweDAzLDB4MDAsMHgwNCwweDAwCg' in text:
+        return True
+    if 'MHg0ZCwweDVhLDB4ZTgsMHgwMCwweDAwLDB4MDAsMHgwMCwweDViCg' in text:
+        return True
+    if 'MHg0RCwweDVBLDB4RTgsMHgwMCwweDAwLDB4MDAsMHgwMCwweDVCCg' in text:
+        return True
+    if 'MHg0ZCwweDVhLDB4OTAsMHgwMCwweDAzLDB4MDAsMHgwMCwweDAwCg' in text:
+        return True
+    if 'MHg0RCwweDVBLDB4OTAsMHgwMCwweDAzLDB4MDAsMHgwMCwweDAwCg' in text:
+        return True
+    if 'MHg0ZCwweDVhLDB4NTAsMHgwMCwweDAyLDB4MDAsMHgwMCwweDAwCg' in text:
+        return True
+    if 'MHg0RCwweDVBLDB4NTAsMHgwMCwweDAyLDB4MDAsMHgwMCwweDAwCg' in text:
+        return True
+    if 'MHg0ZCwweDVhLDB4MDAsMHgwMCwweDAwLDB4MDAsMHgwMCwweDAwCg' in text:
+        return True
+    if 'MHg0RCwweDVBLDB4MDAsMHgwMCwweDAwLDB4MDAsMHgwMCwweDAwCg' in text:
+        return True
+    if 'MHg0ZCwweDVhLDB4NDEsMHg1MiwweDU1LDB4NDgsMHg4OSwweGU1Cg' in text:
+        return True
+    if 'MHg0RCwweDVBLDB4NDEsMHg1MiwweDU1LDB4NDgsMHg4OSwweEU1Cg' in text:
+        return True
+    if 'MHg0ZCwweDVhLDB4ODAsMHgwMCwweDAxLDB4MDAsMHgwMCwweDAwCg' in text:
+        return True
+    if 'MHg0RCwweDVBLDB4ODAsMHgwMCwweDAxLDB4MDAsMHgwMCwweDAwCg' in text:
+        return True
+    if 'MHg0ZCwweDVhLDB4OTAsMHgwMCwweDAzLDB4MDAsMHgwNCwweDAwCg' in text:
+        return True
+    if 'MHg0RCwweDVBLDB4OTAsMHgwMCwweDAzLDB4MDAsMHgwNCwweDAwCg' in text:
+        return True
+    if 'MHg0ZCwweDVhLDB4ZTgsMHgwMCwweDAwLDB4MDAsMHgwMCwweDViCg' in text:
+        return True
+    if 'MHg0RCwweDVBLDB4RTgsMHgwMCwweDAwLDB4MDAsMHgwMCwweDVCCg' in text:
+        return True
+
 
 def hexbin_find(text):
     if '303130303131303130313031313031303030303030303030303030303030303030303030303030303030303030303030' in text:
@@ -320,7 +424,7 @@ def hexbin_find(text):
         return True
 
 
-def binbase_find(text):
+def basebin_find(text):
     if 'MDEwMDExMDEwMTAxMTAxMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw' in text:
         return True
     if 'MDEwMDExMDEwMTAxMTAxMDAxMDAwMDAxMDEwMTAwMTAwMTAxMDEwMTAxMDAxMDAw' in text:
@@ -390,6 +494,7 @@ response = r.json()
 
 logfile = open(logfile, 'a+')
 counter = 0
+bytes = 0
 for paste in response:
     title = paste["title"]
     type = paste["syntax"]
@@ -400,6 +505,7 @@ for paste in response:
     size = int(paste["size"])
     if (type == 'text' and size > 5000):
         counter += 1
+        bytes += size
         url = paste["scrape_url"]
         r = requests.get(url)
         if b64_find(r.content):
@@ -495,17 +601,32 @@ for paste in response:
             save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
-        if binbase_find(r.content):
-            type = "binbase"
+        if basebin_find(r.content):
+            type = "basebin"
             save_file(r.content, type, key)
             save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
-        if binbase_find(r.content[::-1]):
-            type = "binbase"
+        if basebin_find(r.content[::-1]):
+            type = "basebin"
             save_file(r.content, type, key)
+            save_raw(r.content, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if basehex_find(r.content):
+            type = "basehex"
+            save_file(r.content, type, key)
+            save_raw(r.content, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if basehex_find(r.content[::-1]):
+            type = "basehex"
+            save_file(r.content[::-1], type, key)
             save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
 
-print(counter)
+end = time.time()
+print("documents read: " + str(counter))
+print("bytes read: " + str(bytes))
+print("run time: " + str(end - start))
