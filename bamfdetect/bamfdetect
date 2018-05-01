@@ -1,0 +1,45 @@
+#!/usr/bin/env python2
+import BAMF_Detect
+import json
+from multiprocessing import cpu_count
+
+
+if __name__ == "__main__":
+    from argparse import ArgumentParser
+
+    parser = ArgumentParser(
+        prog=__file__,
+        description="Identifies and extracts information from bots",
+        version="%(prog)s v" + BAMF_Detect.get_version() + " by Brian Wallace (@botnet_hunter)",
+        epilog="%(prog)s v" + BAMF_Detect.get_version() + " by Brian Wallace (@botnet_hunter)"
+    )
+    parser.add_argument('path', metavar='path', type=str, nargs='*', default=None,
+                        help="Paths to files or directories to scan")
+    parser.add_argument('-d', '--detect', default=False, required=False, action='store_true', help="Only detect files")
+    parser.add_argument('-r', '--recursive', default=False, required=False, action='store_true',
+                        help="Scan paths recursively")
+    parser.add_argument('-l', '--list', default=False, required=False, action='store_true',
+                        help='List available modules')
+    parser.add_argument('-m', '--module', default=None, type=str, action='append', help='Modules to use, if not defined'
+                                                                                        'all modules are used')
+    parser.add_argument('-t', '--threads', default=cpu_count(), type=int, help='Number of threads to use')
+
+    args = parser.parse_args()
+
+    if args.list:
+        for mod in BAMF_Detect.get_loaded_modules():
+            print mod
+    else:
+        if args.path is None or len(args.path) == 0:
+            parser.print_help()
+            exit()
+        for file_path, result in BAMF_Detect.async_scanning(args.path, args.detect, args.recursive, args.module,
+                                                            process_count=args.threads):
+            try:
+                to_print = json.dumps({file_path: result}) + ","
+                print to_print
+            except KeyboardInterrupt:
+                raise
+            except:
+                # todo figure out a good way to log these errors
+                pass

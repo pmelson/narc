@@ -292,6 +292,73 @@ def hexbase_find(text):
         return True
 
 
+
+def hexbin_find(text):
+    if '303130303131303130313031313031303030303030303030303030303030303030303030303030303030303030303030' in text:
+        return True
+    if '303130303131303130313031313031303031303030303031303130313030313030313031303130313031303031303030' in text:
+        return True
+    if '303130303131303130313031313031303031303130303030303030303030303030303030303031303030303030303030' in text:
+        return True
+    if '303130303131303130313031313031303130303030303030303030303030303030303030303030313030303030303030' in text:
+        return True
+    if '303130303131303130313031313031303130303130303030303030303030303030303030303031313030303030303030' in text:
+        return True
+    if '303130303131303130313031313031303131313031303030303030303030303030303030303030303030303030303030' in text:
+        return True
+    if '30 31 30 30 31 31 30 31 30 31 30 31 31 30 31 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30' in text:
+        return True
+    if '30 31 30 30 31 31 30 31 30 31 30 31 31 30 31 30 30 31 30 30 30 30 30 31 30 31 30 31 30 30 31 30 30 31 30 31 30 31 30 31 30 31 30 30 31 30 30 30' in text:
+        return True
+    if '30 31 30 30 31 31 30 31 30 31 30 31 31 30 31 30 30 31 30 31 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 31 30 30 30 30 30 30 30 30 30' in text:
+        return True
+    if '30 31 30 30 31 31 30 31 30 31 30 31 31 30 31 30 31 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 31 30 30 30 30 30 30 30 30' in text:
+        return True
+    if '30 31 30 30 31 31 30 31 30 31 30 31 31 30 31 30 31 30 30 31 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 31 31 30 30 30 30 30 30 30 30' in text:
+        return True
+    if '30 31 30 30 31 31 30 31 30 31 30 31 31 30 31 30 31 31 31 30 31 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30 30' in text:
+        return True
+
+
+def binbase_find(text):
+    if 'MDEwMDExMDEwMTAxMTAxMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw' in text:
+        return True
+    if 'MDEwMDExMDEwMTAxMTAxMDAxMDAwMDAxMDEwMTAwMTAwMTAxMDEwMTAxMDAxMDAw' in text:
+        return True
+    if 'MDEwMDExMDEwMTAxMTAxMDAxMDEwMDAwMDAwMDAwMDAwMDAwMDAxMDAwMDAwMDAw' in text:
+        return True
+    if 'MDEwMDExMDEwMTAxMTAxMDEwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMTAwMDAwMDAw' in text:
+        return True
+    if 'MDEwMDExMDEwMTAxMTAxMDEwMDEwMDAwMDAwMDAwMDAwMDAwMDAxMTAwMDAwMDAw' in text:
+        return True
+    if 'MDEwMDExMDEwMTAxMTAxMDExMTAxMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw' in text:
+        return True
+    if 'MDEwMCAxMTAxIDAxMDEgMTAxMCAwMDAwIDAwMDAgMDAwMCAwMDAwIDAwMDAgMDAwMCAwMDAwIDAw' in text:
+        return True
+    if 'MDEwMCAxMTAxIDAxMDEgMTAxMCAwMTAwIDAwMDEgMDEwMSAwMDEwIDAxMDEgMDEwMSAwMTAwIDEw' in text:
+        return True
+    if 'MDEwMCAxMTAxIDAxMDEgMTAxMCAwMTAxIDAwMDAgMDAwMCAwMDAwIDAwMDAgMDAxMCAwMDAwIDAw' in text:
+        return True
+    if 'MDEwMCAxMTAxIDAxMDEgMTAxMCAxMDAwIDAwMDAgMDAwMCAwMDAwIDAwMDAgMDAwMSAwMDAwIDAw' in text:
+        return True
+    if 'MDEwMCAxMTAxIDAxMDEgMTAxMCAxMDAxIDAwMDAgMDAwMCAwMDAwIDAwMDAgMDAxMSAwMDAwIDAw' in text:
+        return True
+    if 'MDEwMCAxMTAxIDAxMDEgMTAxMCAxMTEwIDEwMDAgMDAwMCAwMDAwIDAwMDAgMDAwMCAwMDAwIDAw' in text:
+        return True
+    if 'MDEgMDAgMTEgMDEgMDEgMDEgMTAgMTAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMD' in text:
+        return True
+    if 'MDEgMDAgMTEgMDEgMDEgMDEgMTAgMTAgMDEgMDAgMDAgMDEgMDEgMDEgMDAgMTAgMDEgMDEgMDEgMDEgMDEgMDAgMTAgMD' in text:
+        return True
+    if 'MDEgMDAgMTEgMDEgMDEgMDEgMTAgMTAgMDEgMDEgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMTAgMDAgMDAgMDAgMD' in text:
+        return True
+    if 'MDEgMDAgMTEgMDEgMDEgMDEgMTAgMTAgMTAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDEgMDAgMDAgMDAgMD' in text:
+        return True
+    if 'MDEgMDAgMTEgMDEgMDEgMDEgMTAgMTAgMTAgMDEgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMTEgMDAgMDAgMDAgMD' in text:
+        return True
+    if 'MDEgMDAgMTEgMDEgMDEgMDEgMTAgMTAgMTEgMTAgMTAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMD' in text:
+        return True
+
+
 def save_file(text, type, key):
     print('%s: %s' % (type, key))
     outfile = pastes_dir + key + "." + type
@@ -299,13 +366,22 @@ def save_file(text, type, key):
         file = open(outfile, 'w')
         file.write(text)
         file.close()
-        rawfile = pastes_dir + 'origraw/' + key
+        return
+    else:
+        print("paste already exists: " + outfile)
+        return
+
+
+def save_raw(text, key):
+    rawfile = pastes_dir + 'origraw/' + key
+    if not os.path.exists(rawfile):
         file = open(rawfile, 'w')
         file.write(text)
         file.close()
         return
     else:
-        print("paste already exists")
+        print("paste already exists: " + rawfile)
+        return
 
 
 params = {'limit': limit}
@@ -329,66 +405,106 @@ for paste in response:
         if b64_find(r.content):
             type = "base64"
             save_file(r.content, type, key)
+            save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
         if hex_find(r.content):
             type = "hex"
             save_file(r.content, type, key)
+            save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
         if bin_find(r.content):
             type = "bin"
             save_file(r.content, type, key)
+            save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
         if hexbase_find(r.content):
             type = "hexbase"
             save_file(r.content, type, key)
+            save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
         if dec_find(r.content):
             type = "dec"
             save_file(r.content, type, key)
+            save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
         if posh_find(r.content):
             type = "posh"
             save_file(r.content, type, key)
+            save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
         if doublebase_find(r.content):
             type = "2xbase64"
             save_file(r.content, type, key)
+            save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
         if b64_find(r.content[::-1]):
             type = "base64"
             save_file(r.content[::-1], type, key)
+            save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
         if hex_find(r.content[::-1]):
             type = "hex"
             save_file(r.content[::-1], type, key)
+            save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
         if bin_find(r.content[::-1]):
             type = "bin"
             save_file(r.content[::-1], type, key)
+            save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
         if hexbase_find(r.content[::-1]):
             type = "hexbase"
             save_file(r.content[::-1], type, key)
+            save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
         if dec_find(r.content[::-1]):
             type = "dec"
             save_file(r.content[::-1], type, key)
+            save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
         if doublebase_find(r.content[::-1]):
             type = "2xbase64"
             save_file(r.content[::-1], type, key)
+            save_raw(r.content, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+
+# EXPERIMENTAL DETECTION BELOW THIS LINE
+
+        if hexbin_find(r.content):
+            type = "hexbin"
+            save_file(r.content, type, key)
+            save_raw(r.content, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if hexbin_find(r.content[::-1]):
+            type = "hexbin"
+            save_file(r.content[::-1], type, key)
+            save_raw(r.content, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if binbase_find(r.content):
+            type = "binbase"
+            save_file(r.content, type, key)
+            save_raw(r.content, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if binbase_find(r.content[::-1]):
+            type = "binbase"
+            save_file(r.content, type, key)
+            save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
 
