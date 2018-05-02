@@ -5,7 +5,8 @@ import time
 start = time.time()
 url_pastebin_scraping = 'https://scrape.pastebin.com/api_scraping.php'
 limit = 250
-pastes_dir = '/home/ubuntu/pastes/'
+pastes_dir = '/home/ubuntu/pastes/'  # Trailing slash is important here!
+originals_dir = '/home/ubuntu/pastes/origraw/'  # Trailing slash is important here!
 logfile = pastes_dir + 'pastes.log'
 
 
@@ -463,6 +464,13 @@ def basebin_find(text):
         return True
 
 
+def basegzip_find(text):
+    if 'tVVLb' in text:
+        return True
+    if 'H4sIA' in text:
+        return True
+
+
 def save_file(text, type, key):
     print('%s: %s' % (type, key))
     outfile = pastes_dir + key + "." + type
@@ -477,7 +485,7 @@ def save_file(text, type, key):
 
 
 def save_raw(text, key):
-    rawfile = pastes_dir + 'origraw/' + key
+    rawfile = originals_dir + key
     if not os.path.exists(rawfile):
         file = open(rawfile, 'w')
         file.write(text)
@@ -622,6 +630,12 @@ for paste in response:
         if basehex_find(r.content[::-1]):
             type = "basehex"
             save_file(r.content[::-1], type, key)
+            save_raw(r.content, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if basegzip_find(r.content):
+            type = "basegzip"
+            save_file(r.content, type, key)
             save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
