@@ -594,6 +594,18 @@ for paste in response:
             save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
+        if basegzip_find(r.content):
+            type = "basegzip"
+            save_file(r.content, type, key)
+            save_raw(r.content, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if basegzip_find(r.content[::-1]):
+            type = "basegzip"
+            save_file(r.content[::-1], type, key)
+            save_raw(r.content, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
 
 # EXPERIMENTAL DETECTION BELOW THIS LINE
 
@@ -630,12 +642,6 @@ for paste in response:
         if basehex_find(r.content[::-1]):
             type = "basehex"
             save_file(r.content[::-1], type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if basegzip_find(r.content):
-            type = "basegzip"
-            save_file(r.content, type, key)
             save_raw(r.content, key)
             logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
             break
