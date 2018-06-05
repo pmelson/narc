@@ -17,7 +17,8 @@ DECCM_REGEX = re.compile('77,90,(144,0,3,0,4,0|232,0,0,0,0,91|144,0,3,0,0,0|80,0
 HEX_REGEX = re.compile('4d5a(00000000|41525548|50000200|80000100|90000300|e8000000)[a-f0-9]{254,}', re.IGNORECASE)
 HEXBASE_REGEX = re.compile('5456(71514141|70514141|6f414141|7042556c|71414141|726f4141)[a-f0-9]{254,}', re.IGNORECASE)
 BIN_REGEX = re.compile('0100110101011010(00000000000000000000000000000000|01000001010100100101010101001000|01010000000000000000001000000000|10000000000000000000000100000000|10010000000000000000001100000000|11101000000000000000000000000000)[0-1]{1000,}')
-GZ64_REGEX = re.compile('(H4sIA|tVVLb)[A-Za-z0-9/+]{252,}[\=]{0,2}')
+GZ64_REGEX = re.compile('H4sIA[A-Za-z0-9/+]{252,}[\=]{0,2}')
+GZENCODE_REGEX = re.compile('eJ(y0|y8|yc|yM|ys|yU|zc|zE|zk|zM|zs|zt|zU)[a-zA-Z0-9/+]{250,}[\=]{0,2}')
 
 
 def decdump(text):
@@ -137,7 +138,7 @@ def gz64dump(text):
         try:
             for a in base64.b64decode(text):
                 frame.append(a)
-        except base64.error:
+        except:
             print("Error decoding base64")
             bin = "ERR"
         try:
@@ -145,10 +146,12 @@ def gz64dump(text):
         except zlib.error:
             print("Error decompressing")
             bin = "ERR"
-        if mimetype.from_buffer(bin) == 'application/x-dosexec':
+            return bin
+        filetype = mimetype.from_buffer(bin)
+        if filetype  == 'application/x-dosexec':
             return bin
         else:
-            print("Error, not PE file")
+            print("Error, not PE file. File type detected: " + filetype)
             bin = "ERR"
             return bin
 

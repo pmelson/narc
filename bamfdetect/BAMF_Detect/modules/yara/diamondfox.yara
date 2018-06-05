@@ -1,10 +1,5 @@
 rule diamond_fox
 {
-    meta:
-        author = "Brian Wallace @botnet_hunter"
-        author_email = "bwall@ballastsecurity.net"
-        date = "2015-08-22"
-        description = "Identify DiamondFox"
     strings:
     	$s1 = "UPDATE_B"
         $s2 = "UNISTALL_B"
@@ -12,6 +7,24 @@ rule diamond_fox
         $s4 = "P_WALLET"
         $s5 = "GR_COMMAND"
         $s6 = "FTPUPLOAD"
+        $s0 = "loader.exe"
+        $s18 = "Melt.bat"
+        $s19 = "<Panel>" wide
+        $s20 = "VM_WINXP" wide
+        $s21 = "plugins/keylogger.p" wide
+        $s22 = "</ABox>" wide
+        $s23 = "winmgmts:{impersonationlevel=impersonate}!\\\\\\\\.\\\\root\\\\$"
+        $s7 = "<Time>" wide
+        $s8 = "MY_PATH"
+        $s9 = "cript.Sleep(2000)"
+        $s10 = "</Boxie>" wide
+        $s11 = "SHELL32"
+        $s12 = "& chr(34)" wide
+        $s13 = "</USB>" wide
+        $s14 = "Shell.Application" wide
+        $s15 = "CUSTOM" wide
+        $s16 = "\\\\Armory\\\\" wide
+        $s17 = "C_DATA"
     condition:
-    	all of them
+        6 of ($s*) and filesize<81KB
 }

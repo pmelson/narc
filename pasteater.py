@@ -465,9 +465,48 @@ def basebin_find(text):
 
 
 def basegzip_find(text):
-    if 'tVVLb' in text:
+    if 'H4sIAAAAAAA' in text:
         return True
-    if 'H4sIA' in text:
+
+
+def gzencode_find(text):
+    if 'eJy0' in text:
+        return True
+    if 'eJy8' in text:
+        return True
+    if 'eJyc' in text:
+        return True
+    if 'eJyM' in text:
+        return True
+    if 'eJys' in text:
+        return True
+    if 'eJyU' in text:
+        return True
+    if 'eJzc' in text:
+        return True
+    if 'eJzE' in text:
+        return True
+    if 'eJzk' in text:
+        return True
+    if 'eJzM' in text:
+        return True
+    if 'eJzs' in text:
+        return True
+    if 'eJzt' in text:
+        return True
+    if 'eJzU' in text:
+        return True
+
+
+    if 'op3n' in text:
+        return True
+
+
+    if 'melson' in text:
+        return True
+    if 'Melson' in text:
+        return True
+    if 'MELSON' in text:
         return True
 
 
@@ -609,6 +648,12 @@ for paste in response:
 
 # EXPERIMENTAL DETECTION BELOW THIS LINE
 
+#        if gzencode_find(r.content):
+#            type="gzencode"
+#            save_file(r.content, type, key)
+#            save_raw(r.content, key)
+#            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+#            break
         if hexbin_find(r.content):
             type = "hexbin"
             save_file(r.content, type, key)
