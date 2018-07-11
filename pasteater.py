@@ -21,6 +21,18 @@ def posh_find(text):
         return True
     if "System.Reflection.AssemblyName" in text:
         return True
+    # Added a "double-check" for camel-casing by lowering text.
+    # Probably lots more to do to counter PowerShell obfuscation.
+    if "[system.convert]::" in text.lower():
+        return True
+    if "frombase64string(" in text.lower():
+        return True
+    if "new-object system.io." in text.lower():
+        return True
+    if "[system.net." in text.lower():
+        return True
+    if "system.reflection.assemblyname" in text.lower():
+        return True
 
 
 def dec_find(text):
@@ -498,18 +510,6 @@ def gzencode_find(text):
         return True
 
 
-    if 'op3n' in text:
-        return True
-
-
-    if 'melson' in text:
-        return True
-    if 'Melson' in text:
-        return True
-    if 'MELSON' in text:
-        return True
-
-
 def save_file(text, type, key):
     print('%s: %s' % (type, key))
     outfile = pastes_dir + key + "." + type
@@ -647,13 +647,6 @@ for paste in response:
             break
 
 # EXPERIMENTAL DETECTION BELOW THIS LINE
-
-#        if gzencode_find(r.content):
-#            type="gzencode"
-#            save_file(r.content, type, key)
-#            save_raw(r.content, key)
-#            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-#            break
         if hexbin_find(r.content):
             type = "hexbin"
             save_file(r.content, type, key)
