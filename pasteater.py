@@ -1,3 +1,8 @@
+# TODO:
+# Find base64-encoded GZip PE, need samples
+# Make sure performance doesn't suck when the stuff above is done
+
+
 import requests
 import os
 import time
@@ -8,7 +13,7 @@ limit = 250
 pastes_dir = '/home/ubuntu/pastes/'  # Trailing slash is important here!
 originals_dir = '/home/ubuntu/pastes/origraw/'  # Trailing slash is important here!
 logfile = pastes_dir + 'pastes.log'
-
+userlist = ['user1', 'user2', 'user3']  # Define usernames for upload tracking
 
 def posh_find(text):
     if "[System.Convert]::" in text:
@@ -20,6 +25,10 @@ def posh_find(text):
     if "[System.Net." in text:
         return True
     if "System.Reflection.AssemblyName" in text:
+        return True
+    if "<PCSettings>" in text:
+        return True
+    if "<DeepLink>" in text:
         return True
     # Added a "double-check" for camel-casing by lowering text.
     # Probably lots more to do to counter PowerShell obfuscation.
@@ -481,34 +490,6 @@ def basegzip_find(text):
         return True
 
 
-def gzencode_find(text):
-    if 'eJy0' in text:
-        return True
-    if 'eJy8' in text:
-        return True
-    if 'eJyc' in text:
-        return True
-    if 'eJyM' in text:
-        return True
-    if 'eJys' in text:
-        return True
-    if 'eJyU' in text:
-        return True
-    if 'eJzc' in text:
-        return True
-    if 'eJzE' in text:
-        return True
-    if 'eJzk' in text:
-        return True
-    if 'eJzM' in text:
-        return True
-    if 'eJzs' in text:
-        return True
-    if 'eJzt' in text:
-        return True
-    if 'eJzU' in text:
-        return True
-
 
 def save_file(text, type, key):
     print('%s: %s' % (type, key))
@@ -550,7 +531,13 @@ for paste in response:
     key = paste["key"]
     date = paste["date"]
     size = int(paste["size"])
-    if (type == 'text' and size > 5000):
+    if any(user.lower() == username.lower() for username in userlist):
+        type = "user_" + user
+        save_file(r.content, type, key)
+        save_raw(r.content, key)
+        logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+        break
+    if (type == 'text' and size > 3000 and not os.path.exists(originals_dir + key)):
         counter += 1
         bytes += size
         url = paste["scrape_url"]
@@ -647,6 +634,7 @@ for paste in response:
             break
 
 # EXPERIMENTAL DETECTION BELOW THIS LINE
+
         if hexbin_find(r.content):
             type = "hexbin"
             save_file(r.content, type, key)
