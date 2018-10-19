@@ -1,4 +1,3 @@
-import sys
 import os
 import glob
 import re
@@ -9,7 +8,7 @@ import magic
 
 
 mimetype = magic.Magic(mime=True)
-pastes_dir = '/home/ubuntu/pastes/'	# trailing slash is IMPORTANT here
+pastes_dir = '/home/ubuntu/pastes/'     # trailing slash is IMPORTANT here
 BASE64_REGEX = re.compile('TV(oAAA|pBUl|pQAA|qAAA|qQAA|roAA)[A-Za-z0-9/+]{112,}[\=]{0,2}')
 B64URLSAFE_REGEX = re.compile('TV(oAAA|pBUl|pQAA|qAAA|qQAA|roAA)[A-Za-z0-9_-]{112,}[\=]{0,2}')
 DECSP_REGEX = re.compile('77\ 90\ (144\ 0\ 3\ 0\ 4\ 0|232\ 0\ 0\ 0\ 0\ 91|144\ 0\ 3\ 0\ 0\ 0|80\ 0\ 2\ 0\ 0\ 0|0\ 0\ 0\ 0\ 0\ 0|65\ 82\ 85\ 72\ 137\ 229|128\ 0\ 1\ 0\ 0\ 0|144\ 0\ 3\ 0\ 4\ 0|232\ 0\ 0\ 0\ 0\ 91)[0-9\ ]{254,}')
@@ -133,7 +132,6 @@ def hexdump(text):
 def gz64dump(text):
     if GZ64_REGEX.search(text):
         print("basegzip matched")
-        match = GZ64_REGEX.search(text)
         frame = bytearray()
         try:
             for a in base64.b64decode(text):
@@ -148,7 +146,7 @@ def gz64dump(text):
             bin = "ERR"
             return bin
         filetype = mimetype.from_buffer(bin)
-        if filetype  == 'application/x-dosexec':
+        if filetype == 'application/x-dosexec':
             return bin
         else:
             print("Error, not PE file. File type detected: " + filetype)
@@ -170,10 +168,10 @@ ls = pastes_dir + '*.bin'
 binlist = glob.glob(ls)
 for filename in binlist:
     print(filename)
-    raw=open(filename).readlines()
-    for n,line in enumerate(raw):
-        raw[n]=line.rstrip()
-        raw[n]=raw[n].replace(" ", "")
+    raw = open(filename).readlines()
+    for n, line in enumerate(raw):
+        raw[n] = line.rstrip()
+        raw[n] = raw[n].replace(" ", "")
     raw = ''.join(raw)
     bin = bindump(raw)
     if not (bin == 'ERR'):
@@ -185,10 +183,10 @@ for filename in binlist:
 ls = pastes_dir + '*.base64'
 baselist = glob.glob(ls)
 for filename in baselist:
-    print filename
-    raw=open(filename).readlines()
-    for n,line in enumerate(raw):
-        raw[n]=line.rstrip()
+    print(filename)
+    raw = open(filename).readlines()
+    for n, line in enumerate(raw):
+        raw[n] = line.rstrip()
     raw = ''.join(raw)
     bin = basedump(raw)
     if not (bin == 'ERR'):
@@ -200,11 +198,11 @@ for filename in baselist:
 ls = pastes_dir + '*.hex'
 hexlist = glob.glob(ls)
 for filename in hexlist:
-    print filename
-    raw=open(filename).readlines()
-    for n,line in enumerate(raw):
-        raw[n]=line.rstrip()
-        raw[n]=raw[n].replace(" ", "")
+    print(filename)
+    raw = open(filename).readlines()
+    for n, line in enumerate(raw):
+        raw[n] = line.rstrip()
+        raw[n] = raw[n].replace(" ", "")
     raw = ''.join(raw)
     bin = hexdump(raw)
     if not (bin == 'ERR'):
@@ -216,12 +214,12 @@ for filename in hexlist:
 ls = pastes_dir + '*.hexbase'
 hexblist = glob.glob(ls)
 for filename in hexblist:
-    print filename
-    raw=open(filename).readlines()
-    for n,line in enumerate(raw):
-        raw[n]=line.rstrip()
-        raw[n]=raw[n].replace(" ", "")
-        raw[n]=raw[n].replace("#", "A")
+    print(filename)
+    raw = open(filename).readlines()
+    for n, line in enumerate(raw):
+        raw[n] = line.rstrip()
+        raw[n] = raw[n].replace(" ", "")
+        raw[n] = raw[n].replace("#", "A")
     raw = ''.join(raw)
     bin = hexdump(raw)
     if not (bin == 'ERR'):
@@ -235,10 +233,10 @@ for filename in hexblist:
 ls = pastes_dir + '*.dec'
 declist = glob.glob(ls)
 for filename in declist:
-    print filename
-    raw=open(filename).readlines()
-    for n,line in enumerate(raw):
-        raw[n]=line.rstrip()
+    print(filename)
+    raw = open(filename).readlines()
+    for n, line in enumerate(raw):
+        raw[n] = line.rstrip()
     raw = ''.join(raw)
     bin = decdump(raw)
     if not (bin == 'ERR'):
@@ -250,10 +248,10 @@ for filename in declist:
 ls = pastes_dir + '*.basegzip'
 baselist = glob.glob(ls)
 for filename in baselist:
-    print filename
-    raw=open(filename).readlines()
-    for n,line in enumerate(raw):
-        raw[n]=line.rstrip()
+    print(filename)
+    raw = open(filename).readlines()
+    for n, line in enumerate(raw):
+        raw[n] = line.rstrip()
     raw = ''.join(raw)
     bin = gz64dump(raw)
     if not (bin == 'ERR'):

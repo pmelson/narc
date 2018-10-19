@@ -1,8 +1,3 @@
-# TODO:
-# Find base64-encoded GZip PE, need samples
-# Make sure performance doesn't suck when the stuff above is done
-
-
 import requests
 import os
 import time
@@ -13,7 +8,7 @@ limit = 250
 pastes_dir = '/home/ubuntu/pastes/'  # Trailing slash is important here!
 originals_dir = '/home/ubuntu/pastes/origraw/'  # Trailing slash is important here!
 logfile = pastes_dir + 'pastes.log'
-userlist = ['user1', 'user2', 'user3']  # Define usernames for upload tracking
+
 
 def posh_find(text):
     if "[System.Convert]::" in text:
@@ -26,9 +21,25 @@ def posh_find(text):
         return True
     if "System.Reflection.AssemblyName" in text:
         return True
+    if 'powershell -' in text:
+        return True
+    if 'powershell.exe -' in text:
+        return True
+    if '\1.0\powershell.exe' in text:
+        return True
+    if 'PowerShell -' in text:
+        return True
+    if 'PowerShell.exe -' in text:
+        return True
+    if 'cG93ZXJzaGVsbC' in text:
+        return True
+    if 'UG93ZXJTaGVsbC' in text:
+        return True
     if "<PCSettings>" in text:
         return True
     if "<DeepLink>" in text:
+        return True
+    if "So MAny scrapers hahahaha" in text:
         return True
     # Added a "double-check" for camel-casing by lowering text.
     # Probably lots more to do to counter PowerShell obfuscation.
@@ -143,6 +154,10 @@ def b64_find(text):
         return True
     if 'TVqQAAMABAAAAAAA' in text:
         return True
+    if 'TVpBUlVIieVIgewgAAAA' in text:
+        return True
+    if 'kJCQkE1aQVJVSInlSIHsIAAAA' in text:
+        return True
 
 
 def doublebase_find(text):
@@ -159,6 +174,23 @@ def doublebase_find(text):
     if 'VFZyb0FBQUFBRnRTUlZXS' in text:
         return True
     if 'VFZxUUFBTUFCQUFBQUFBQ' in text:
+        return True
+
+
+def exe_find(text):
+    if '\x4d\x5a\x90\x00\x03\x00\x00\x00' in text:
+        return True
+    if '\x4d\x5a\x50\x00\x02\x00\x00\x00' in text:
+        return True
+    if '\x4d\x5a\x00\x00\x00\x00\x00\x00' in text:
+        return True
+    if '\x4d\x5a\x41\x52\x55\x48\x89\xe5' in text:
+        return True
+    if '\x4d\x5a\x80\x00\x01\x00\x00\x00' in text:
+        return True
+    if '\x4d\x5a\x90\x00\x03\x00\x04\x00' in text:
+        return True
+    if '\x4d\x5a\xe8\x00\x00\x00\x00\x5b' in text:
         return True
 
 
@@ -486,9 +518,121 @@ def basebin_find(text):
 
 
 def basegzip_find(text):
-    if 'H4sIAAAAAAA' in text:
+    if 'H4sIAAAAAAAEAO18' in text:
+        return True
+    if 'H4sIAAAAAAAEAO19' in text:
+        return True
+    if 'H4sIAAAAAAAEAOy9' in text:
+        return True
+    if 'H4sIAAAAAAAEAO29' in text:
+        return True
+    if 'H4sIAAAAAAAEAOS9' in text:
+        return True
+    if 'H4sIAAAAAAAEAOy8' in text:
+        return True
+    if 'H4sIAAAAAAAEAOx9' in text:
+        return True
+    if 'H4sIAAAAAAAEAO17' in text:
+        return True
+    if 'H4sIAAAAAAAEAMy9' in text:
         return True
 
+
+def baserot_find(text):
+    if 'GIdDNNZNNNNRNNNN' in text:
+        return True
+    if 'GIcDNNVNNNNRNN8N' in text:
+        return True
+    if 'GIbNNNNNNNNNNNNN' in text:
+        return True
+    if 'GIcOHyIVvrIVtrjt' in text:
+        return True
+    if 'GIdNNNRNNNNRNONN' in text:
+        return True
+    if 'GIebNNNNNSgFEIJW' in text:
+        return True
+    if 'GIdDNNZNONNNNNNN' in text:
+        return True
+    if 'GIcOHyIVvrIVtrjtNNNN' in text:
+        return True
+
+
+def base64_doc(text):
+    # application/msword or application/vnd.ms-excel
+    if '0M8R4KGxGuEAAAAAAAAAAAAAAAAAAAAA' in text:
+        return True
+    # application/vnd.openxmlformats-officedocument.*
+    if 'UEsDBBQABgAIAAAAIQ' in text:
+        return True
+    if 'UEsDBBQACAAIAAAAAA' in text:
+        return True
+    # text/rtf
+    if 'e1xydGYxXGFkZWZsYW5nMTAy' in text:
+        return True
+    if 'e1xydGYxXGFuc2lcYW5zaWNw' in text:
+        return True
+    if 'e1xydGYxB25zaQduc2ljcGcx' in text:
+        return True
+    if 'e1xydGYxDQogSGVyZSBhcmUg' in text:
+        return True
+    if 'e1xydGYxe1xvYmplY3Rcb2Jq' in text:
+        return True
+    if 'e1xydGZ7XG9iamVjdFxvYmpo' in text:
+        return True
+
+
+def gzencode_find(text):
+    if 'eJy0' in text:
+        return True
+    if 'eJy8' in text:
+        return True
+    if 'eJyc' in text:
+        return True
+    if 'eJyM' in text:
+        return True
+    if 'eJys' in text:
+        return True
+    if 'eJyU' in text:
+        return True
+    if 'eJzc' in text:
+        return True
+    if 'eJzE' in text:
+        return True
+    if 'eJzk' in text:
+        return True
+    if 'eJzM' in text:
+        return True
+    if 'eJzs' in text:
+        return True
+    if 'eJzt' in text:
+        return True
+    if 'eJzU' in text:
+        return True
+    if 'cG93ZXJzaGVsbC' in text:
+        return True
+    if 'UG93ZXJTaGVsbC' in text:
+        return True
+
+
+def basethreetwelve_find(text):
+    if '396 398 425 393 377 377 389 377 377 377 377 381 377 377 377 377' in text:
+        return True
+    if '396 398 424 393 377 377 385 377 377 377 377 381 377 377 368 377' in text:
+        return True
+    if '396 398 423 377 377 377 377 377 377 377 377 377 377 377 377 377' in text:
+        return True
+    if '396 398 424 378 397 420 398 385 417 413 398 385 415 413 431 415' in text:
+        return True
+    if '396 398 425 377 377 377 381 377 377 377 377 381 377 378 377 377' in text:
+        return True
+    if '396 398 426 423 377 377 377 377 377 382 428 395 394 398 399 386' in text:
+        return True
+    if '396 398 425 393 377 377 389 377 378 377 377 377 377 377 377 377' in text:
+        return True
+    if '396 398 424 378 397 420 398 385 417 413 398 385 415 413 431 415 377 377 377 377' in text:
+        return True
+    if '419 386 379 393 419 381 361 409 393 398 386 398 395 385 422 420 395 385 384 427 385 377 377 377 377' in text:
+        return True
 
 
 def save_file(text, type, key):
@@ -531,17 +675,17 @@ for paste in response:
     key = paste["key"]
     date = paste["date"]
     size = int(paste["size"])
-    if any(user.lower() == username.lower() for username in userlist):
-        type = "user_" + user
-        save_file(r.content, type, key)
-        save_raw(r.content, key)
-        logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-        break
-    if (type == 'text' and size > 3000 and not os.path.exists(originals_dir + key)):
+    if (size > 3000 and not os.path.exists(originals_dir + key)):
         counter += 1
         bytes += size
         url = paste["scrape_url"]
         r = requests.get(url)
+        if exe_find(r.content):
+            type = "exe"
+            save_file(r.content, type, key)
+            save_raw(r.content, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
         if b64_find(r.content):
             type = "base64"
             save_file(r.content, type, key)
@@ -635,6 +779,40 @@ for paste in response:
 
 # EXPERIMENTAL DETECTION BELOW THIS LINE
 
+        if basethreetwelve_find(r.content):
+            type = "basethreetwelve"
+            save_file(r.content, type, key)
+            save_raw(r.content, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if basethreetwelve_find(r.content[::-1]):
+            type = "basethreetwelve"
+            save_file(r.content[::-1], type, key)
+            save_raw(r.content, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if base64_doc(r.content):
+            type = "base64_doc"
+            save_file(r.content, type, key)
+            save_raw(r.content, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if base64_doc(r.content[::-1]):
+            type = "base64_doc"
+            save_file(r.content[::-1], type, key)
+            save_raw(r.content, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            break
+        if baserot_find(r.content):
+            type = "baserot"
+            save_file(r.content, type, key)
+            save_raw(r.content, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+        if baserot_find(r.content[::-1]):
+            type = "baserot"
+            save_file(r.content[::-1], type, key)
+            save_raw(r.content, key)
+            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
         if hexbin_find(r.content):
             type = "hexbin"
             save_file(r.content, type, key)
