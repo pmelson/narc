@@ -7,10 +7,12 @@ rule revengerat {
     $mz = { 4d 5a }
     $revconf1 = "*-]NK[-*" wide
     $revconf2 = "Revenge-RAT" wide
+    $modconf1 = "]NK["
+    $modconf2 = "Revenge"
     $str1 = "RV_MUTEX" wide
     $str2 = "Select * from AntiVirusProduct" wide
     $str3 = "SELECT * FROM FirewallProduct" wide
     $str4 = "select * from Win32_Processor" wide
   condition:
-    $mz at 0 and (all of ($revconf*) or all of ($str*))
+    $mz at 0 and (all of ($revconf*) or all of ($modconf*) or all of ($str*))
 }

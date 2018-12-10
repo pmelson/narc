@@ -26,5 +26,5 @@ rule diamond_fox
         $s16 = "\\\\Armory\\\\" wide
         $s17 = "C_DATA"
     condition:
-        6 of ($s*) and filesize<81KB
+        6 of ($s*) and filesize<100KB
 }
