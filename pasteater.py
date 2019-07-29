@@ -1,39 +1,210 @@
 import requests
 import os
 import time
+import re
+import json
 
 start = time.time()
 url_pastebin_scraping = 'https://scrape.pastebin.com/api_scraping.php'
 limit = 250
+min_size = 1000
 pastes_dir = '/home/ubuntu/pastes/'  # Trailing slash is important here!
 originals_dir = '/home/ubuntu/pastes/origraw/'  # Trailing slash is important here!
-logfile = pastes_dir + 'pastes.log'
+logfile = pastes_dir + 'pastes.json'
+
+# compile regular expressions for hex_find function
+HEX_0 = re.compile('[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}4d[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}5a[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}90[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}03[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}04[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00')
+HEX_1 = re.compile('[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}4d[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}5a[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}e8[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}5b')
+HEX_2 = re.compile('[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}4d[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}5a[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}90[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}03[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00')
+HEX_3 = re.compile('[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}4d[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}5a[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}50[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}02[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00')
+HEX_4 = re.compile('[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}4d[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}5a[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00')
+HEX_5 = re.compile('[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}4d[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}5a[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}41[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}52[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}55[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}48[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}89[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}e5')
+HEX_6 = re.compile('[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}4d[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}5a[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}80[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}01[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00')
+HEX_7 = re.compile('[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}4d[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}5a[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}90[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}03[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}04[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00')
+HEX_8 = re.compile('[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}4d[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}5a[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}e8[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,4}5b')
+
+# list of suspicious accounts to track no matter what they post
+# this should spin out into its own project
+userlist = ['pmelson']
 
 
 def posh_find(text):
-    if "[System.Convert]::" in text:
+    # make term searches case insensitive
+    txtlower = text.lower()
+    if '/c"powershell' in txtlower:
         return True
-    if "FromBase64String(" in text:
+    if '/c powershell' in txtlower:
         return True
-    if "New-Object System.IO." in text:
+    if 'powershell -' in txtlower:
         return True
-    if "[System.Net." in text:
+    if 'powershell /' in txtlower:
         return True
-    if "System.Reflection.AssemblyName" in text:
+    if 'powershell.exe -' in txtlower:
         return True
-    if 'powershell -' in text:
+    if '\1.0\powershell.exe' in txtlower:
         return True
-    if 'powershell.exe -' in text:
+    if '\\1.0\\powershell.exe' in txtlower:
         return True
-    if '\1.0\powershell.exe' in text:
+    if '-runas32' in txtlower:
         return True
-    if 'PowerShell -' in text:
+    if '::createthread' in txtlower:
         return True
-    if 'PowerShell.exe -' in text:
+    if ' -bxor' in txtlower:
         return True
-    if 'cG93ZXJzaGVsbC' in text:
+    if '[system.convert]::' in txtlower:
         return True
-    if 'UG93ZXJTaGVsbC' in text:
+    if 'frombase64string(' in txtlower:
+        return True
+    if 'new-object system.io.' in txtlower:
+        return True
+    if '[system.net.' in txtlower:
+        return True
+    if 'system.reflection.assemblyname' in txtlower:
+        return True
+    if 'x509enrollment.cbinaryconverter' in txtlower:
+        return True
+    if 'convertto-securestring' in txtlower:
+        return True
+    # 'powershell'
+    if '93ZXJzaGVsb' in text:
+        return True
+    if 'd2Vyc2hlbGw' in text:
+        return True
+    if 'dlcnNoZWxs' in text:
+        return True
+    if '8Ad2UAcnMAaGUAbG' in text:
+        return True
+    if 'b3cAZXIAc2gAZWw' in text:
+        return True
+    if '8Ad2UAcnMAaGUAbG' in text:
+        return True
+    # 'PowerShell'
+    if '93ZXJTaGVsb' in text:
+        return True
+    if 'd2VyU2hlbG' in text:
+        return True
+    if '3dlclNoZWx' in text:
+        return True
+    if '8Ad2UAclMAaGUAbG' in text:
+        return True
+    if '3cAZXIAU2gAZWw' in text:
+        return True
+    # '[System.Convert]::'
+    if 'N5c3RlbS5Db252ZXJ0XT' in text:
+        return True
+    if 'eXN0ZW0uQ29udmVydF06O' in text:
+        return True
+    if 'lzdGVtLkNvbnZlcnRdO' in text:
+        return True
+    if 'MAeXMAdGUAbS4AQ28AbnYAZXIAdF0AO' in text:
+        return True
+    if 'AHlzAHRlAG0uAENvAG52AGVyAHRdAD' in text:
+        return True
+    if 'B5cwB0ZQBtLgBDbwBudgBlcgB0XQ' in text:
+        return True
+    # 'FromBase64'
+    if 'JvbUJhc2U2N' in text:
+        return True
+    if 'b21CYXNlNj' in text:
+        return True
+    if 'cm9tQmFzZTY' in text:
+        return True
+    if 'IAb20AQmEAc2UAN' in text:
+        return True
+    if 'AG9tAEJhAHNlADY0' in text:
+        return True
+    if 'gBvbQBCYQBzZQA2' in text:
+        return True
+    # 'New-Object System.IO.'
+    if 'V3LU9iamVjdCBTeXN0ZW0uSU' in text:
+        return True
+    if 'ldy1PYmplY3QgU3lzdGVtLklP' in text:
+        return True
+    if 'ZXctT2JqZWN0IFN5c3RlbS5JT' in text:
+        return True
+    if 'UAdy0AT2IAamUAY3QAIFMAeXMAdGUAbS4ASU8' in text:
+        return True
+    if 'lAHctAE9iAGplAGN0ACBTAHlzAHRlAG0uAElPA' in text:
+        return True
+    if 'ZQB3LQBPYgBqZQBjdAAgUwB5cwB0ZQBtLgBJ' in text:
+        return True
+    # '[System.Net.'
+    if 'N5c3RlbS5OZX' in text:
+        return True
+    if 'TeXN0ZW0uTmV0' in text:
+        return True
+    if 'U3lzdGVtLk5ld' in text:
+        return True
+    if 'MAeXMAdGUAbS4ATmUAd' in text:
+        return True
+    if 'TAHlzAHRlAG0uAE5lAH' in text:
+        return True
+    if 'UwB5cwB0ZQBtLgBOZQB0' in text:
+        return True
+    # 'System.Reflection.AssemblyName'
+    if 'lzdGVtLlJlZmxlY3Rpb24uQXNzZW1ibHlO' in text:
+        return True
+    if '5c3RlbS5SZWZsZWN0aW9uLkFzc2VtYmx5TmFt' in text:
+        return True
+    if 'XN0ZW0uUmVmbGVjdGlvbi5Bc3NlbWJseU5hb' in text:
+        return True
+    if 'kAc3QAZW0ALlIAZWYAbGUAY3QAaW8Abi4AQXMAc2UAbWIAbHkATmE' in text:
+        return True
+    if '5AHN0AGVtAC5SAGVmAGxlAGN0AGlvAG4uAEFzAHNlAG1iAGx5AE5hAG' in text:
+        return True
+    if 'QBzdABlbQAuUgBlZgBsZQBjdABpbwBuLgBBcwBzZQBtYgBseQBOYQBt' in text:
+        return True
+    # '::CreateThread'
+    if 'pDcmVhdGVUaHJlY' in text:
+        return True
+    if '6Q3JlYXRlVGhyZW' in text:
+        return True
+    if 'kNyZWF0ZVRocmVh' in text:
+        return True
+    if 'oAQ3IAZWEAdGUAVGgAcmUAY' in text:
+        return True
+    if 'AENyAGVhAHRlAFRoAHJlAG' in text:
+        return True
+    if 'gBDcgBlYQB0ZQBUaAByZQB' in text:
+        return True
+    # 'X509Enrollment.CBinaryConverter'
+    if 'UwOUVucm9sbG1lbnQuQ0JpbmFyeUNvbnZlcnR' in text:
+        return True
+    if '1MDlFbnJvbGxtZW50LkNCaW5hcnlDb252ZXJ0Z' in text:
+        return True
+    if 'NTA5RW5yb2xsbWVudC5DQmluYXJ5Q29udmVydG' in text:
+        return True
+    if 'UAMDkARW4Acm8AbGwAbWUAbnQALkMAQmkAbmEAcnkAQ28AbnYAZXIAdG' in text:
+        return True
+    if '1ADA5AEVuAHJvAGxsAG1lAG50AC5DAEJpAG5hAHJ5AENvAG52AGVyAHR' in text:
+        return True
+    if 'NQAwOQBFbgBybwBsbABtZQBudAAuQwBCaQBuYQByeQBDbwBudgBlcgB0' in text:
+        return True
+    # 'ConvertTo-SecureString'
+    if '9udmVydFRvLVNlY3VyZVN0cmlu' in text:
+        return True
+    if 'vbnZlcnRUby1TZWN1cmVTdHJpb' in text:
+        return True
+    if 'b252ZXJ0VG8tU2VjdXJlU3RyaW' in text:
+        return True
+    if '8AbnYAZXIAdFQAby0AU2UAY3UAcmUAU3QAcmkAb' in text:
+        return True
+    if 'vAG52AGVyAHRUAG8tAFNlAGN1AHJlAFN0AHJpAG' in text:
+        return True
+    if 'bwBudgBlcgB0VABvLQBTZQBjdQByZQBTdAByaQB' in text:
+        return True
+    # ' -bxor'
+    if 'IC1ieG9y' in text:
+        return True
+    if 'AtYnhvcg' in text:
+        return True
+    if 'LWJ4b3I' in text:
+        return True
+    if 'IC0AYngAb3' in text:
+        return True
+    if 'tAGJ4AG9y' in text:
+        return True
+    if 'LQBieABvc' in text:
         return True
     if "<PCSettings>" in text:
         return True
@@ -41,18 +212,7 @@ def posh_find(text):
         return True
     if "So MAny scrapers hahahaha" in text:
         return True
-    # Added a "double-check" for camel-casing by lowering text.
-    # Probably lots more to do to counter PowerShell obfuscation.
-    if "[system.convert]::" in text.lower():
-        return True
-    if "frombase64string(" in text.lower():
-        return True
-    if "new-object system.io." in text.lower():
-        return True
-    if "[system.net." in text.lower():
-        return True
-    if "system.reflection.assemblyname" in text.lower():
-        return True
+
 
 
 def dec_find(text):
@@ -139,7 +299,46 @@ def bin_find(text):
         return True
 
 
-def b64_find(text):
+def bin_find(text):
+    if '010011010101101000000000000000000000000000000000' in text:
+        return True
+    if '010011010101101001000001010100100101010101001000' in text:
+        return True
+    if '010011010101101001010000000000000000001000000000' in text:
+        return True
+    if '010011010101101010000000000000000000000100000000' in text:
+        return True
+    if '010011010101101010010000000000000000001100000000' in text:
+        return True
+    if '010011010101101011101000000000000000000000000000' in text:
+        return True
+    if '0100 1101 0101 1010 0000 0000 0000 0000 0000 0000 0000 0000' in text:
+        return True
+    if '0100 1101 0101 1010 0100 0001 0101 0010 0101 0101 0100 1000' in text:
+        return True
+    if '0100 1101 0101 1010 0101 0000 0000 0000 0000 0010 0000 0000' in text:
+        return True
+    if '0100 1101 0101 1010 1000 0000 0000 0000 0000 0001 0000 0000' in text:
+        return True
+    if '0100 1101 0101 1010 1001 0000 0000 0000 0000 0011 0000 0000' in text:
+        return True
+    if '0100 1101 0101 1010 1110 1000 0000 0000 0000 0000 0000 0000' in text:
+        return True
+    if '01 00 11 01 01 01 10 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00' in text:
+        return True
+    if '01 00 11 01 01 01 10 10 01 00 00 01 01 01 00 10 01 01 01 01 01 00 10 00' in text:
+        return True
+    if '01 00 11 01 01 01 10 10 01 01 00 00 00 00 00 00 00 00 00 10 00 00 00 00' in text:
+        return True
+    if '01 00 11 01 01 01 10 10 10 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00' in text:
+        return True
+    if '01 00 11 01 01 01 10 10 10 01 00 00 00 00 00 00 00 00 00 11 00 00 00 00' in text:
+        return True
+    if '01 00 11 01 01 01 10 10 11 10 10 00 00 00 00 00 00 00 00 00 00 00 00 00' in text:
+        return True
+
+
+def base64_find(text):
     if 'TVqQAAMAAAAEAAAA' in text:
         return True
     if 'TVpQAAIAAAAEAA8A' in text:
@@ -158,6 +357,8 @@ def b64_find(text):
         return True
     if 'kJCQkE1aQVJVSInlSIHsIAAAA' in text:
         return True
+    if 'pcyBwcm9ncm' in text:
+        return True
 
 
 def doublebase_find(text):
@@ -174,6 +375,27 @@ def doublebase_find(text):
     if 'VFZyb0FBQUFBRnRTUlZXS' in text:
         return True
     if 'VFZxUUFBTUFCQUFBQUFBQ' in text:
+        return True
+
+
+def doublewidebase_find(text):
+    if 'VABWAHEAUQBBAEEATQBBAEEAQQBBAEUAQQBBAEEAQQ' in text:
+        return True
+    if 'VABWAHAAUQBBAEEASQBBAEEAQQBBAEUAQQBBADgAQQ' in text:
+        return True
+    if 'VABWAG8AQQBBAEEAQQBBAEEAQQBBAEEAQQBBAEEAQQ' in text:
+        return True
+    if 'VABWAHAAQgBVAGwAVgBJAGkAZQBWAEkAZwBlAHcAZw' in text:
+        return True
+    if 'VABWAHEAQQBBAEEARQBBAEEAQQBBAEUAQQBCAEEAQQ' in text:
+        return True
+    if 'VABWAHIAbwBBAEEAQQBBAEEARgB0AFMAUgBWAFcASg' in text:
+        return True
+    if 'VABWAHEAUQBBAEEATQBBAEIAQQBBAEEAQQBBAEEAQQ' in text:
+        return True
+    if 'VABWAHAAQgBVAGwAVgBJAGkAZQBWAEkAZwBlAHcAZwBBAEEAQQ' in text:
+        return True
+    if 'awBKAEMAUQBrAEUAMQBhAFEAVgBKAFYAUwBJAG4AbABTAEkASABzAEkAQQBBAEEAQQ' in text:
         return True
 
 
@@ -195,105 +417,38 @@ def exe_find(text):
 
 
 def hex_find(text):
-    if '4d5a900003000000' in text:
+    txtlower = text.lower()
+    if '4d5a900003000000' in txtlower:
         return True
-    if '4D5A900003000000' in text:
+    if '4d5a500002000000' in txtlower:
         return True
-    if '4d5a500002000000' in text:
+    if '4d5a000000000000' in txtlower:
         return True
-    if '4D5A500002000000' in text:
+    if '4d5a4152554889e5' in txtlower:
         return True
-    if '4d5a000000000000' in text:
+    if '4d5a800001000000' in txtlower:
         return True
-    if '4D5A000000000000' in text:
+    if '4d5a900003000400' in txtlower:
         return True
-    if '4d5a4152554889e5' in text:
+    if '4d5ae8000000005b' in txtlower:
         return True
-    if '4D5A4152554889E5' in text:
+    if HEX_0.search(txtlower):
         return True
-    if '4d5a800001000000' in text:
+    if HEX_1.search(txtlower):
         return True
-    if '4D5A800001000000' in text:
+    if HEX_2.search(txtlower):
         return True
-    if '4d5a900003000400' in text:
+    if HEX_3.search(txtlower):
         return True
-    if '4D5A900003000400' in text:
+    if HEX_4.search(txtlower):
         return True
-    if '4d5ae8000000005b' in text:
+    if HEX_5.search(txtlower):
         return True
-    if '4D5AE8000000005B' in text:
+    if HEX_6.search(txtlower):
         return True
-    if '4d 5a 90 00 03 00 04 00' in text:
+    if HEX_7.search(txtlower):
         return True
-    if '4D 5A 90 00 03 00 04 00' in text:
-        return True
-    if '4d 5a e8 00 00 00 00 5b' in text:
-        return True
-    if '4D 5A E8 00 00 00 00 5B' in text:
-        return True
-    if '4d 5a 90 00 03 00 00 00' in text:
-        return True
-    if '4D 5A 90 00 03 00 00 00' in text:
-        return True
-    if '4d 5a 50 00 02 00 00 00' in text:
-        return True
-    if '4D 5A 50 00 02 00 00 00' in text:
-        return True
-    if '4d 5a 00 00 00 00 00 00' in text:
-        return True
-    if '4D 5A 00 00 00 00 00 00' in text:
-        return True
-    if '4d 5a 41 52 55 48 89 e5' in text:
-        return True
-    if '4D 5A 41 52 55 48 89 E5' in text:
-        return True
-    if '4d 5a 80 00 01 00 00 00' in text:
-        return True
-    if '4D 5A 80 00 01 00 00 00' in text:
-        return True
-    if '4d 5a 90 00 03 00 04 00' in text:
-        return True
-    if '4D 5A 90 00 03 00 04 00' in text:
-        return True
-    if '4d 5a e8 00 00 00 00 5b' in text:
-        return True
-    if '4D 5A E8 00 00 00 00 5B' in text:
-        return True
-    if '0x4d,0x5a,0x90,0x00,0x03,0x00,0x04,0x00' in text:
-        return True
-    if '0x4D,0x5A,0x90,0x00,0x03,0x00,0x04,0x00' in text:
-        return True
-    if '0x4d,0x5a,0xe8,0x00,0x00,0x00,0x00,0x5b' in text:
-        return True
-    if '0x4D,0x5A,0xE8,0x00,0x00,0x00,0x00,0x5B' in text:
-        return True
-    if '0x4d,0x5a,0x90,0x00,0x03,0x00,0x00,0x00' in text:
-        return True
-    if '0x4D,0x5A,0x90,0x00,0x03,0x00,0x00,0x00' in text:
-        return True
-    if '0x4d,0x5a,0x50,0x00,0x02,0x00,0x00,0x00' in text:
-        return True
-    if '0x4D,0x5A,0x50,0x00,0x02,0x00,0x00,0x00' in text:
-        return True
-    if '0x4d,0x5a,0x00,0x00,0x00,0x00,0x00,0x00' in text:
-        return True
-    if '0x4D,0x5A,0x00,0x00,0x00,0x00,0x00,0x00' in text:
-        return True
-    if '0x4d,0x5a,0x41,0x52,0x55,0x48,0x89,0xe5' in text:
-        return True
-    if '0x4D,0x5A,0x41,0x52,0x55,0x48,0x89,0xE5' in text:
-        return True
-    if '0x4d,0x5a,0x80,0x00,0x01,0x00,0x00,0x00' in text:
-        return True
-    if '0x4D,0x5A,0x80,0x00,0x01,0x00,0x00,0x00' in text:
-        return True
-    if '0x4d,0x5a,0x90,0x00,0x03,0x00,0x04,0x00' in text:
-        return True
-    if '0x4D,0x5A,0x90,0x00,0x03,0x00,0x04,0x00' in text:
-        return True
-    if '0x4d,0x5a,0xe8,0x00,0x00,0x00,0x00,0x5b' in text:
-        return True
-    if '0x4D,0x5A,0xE8,0x00,0x00,0x00,0x00,0x5B' in text:
+    if HEX_8.search(txtlower):
         return True
 
 
@@ -582,31 +737,7 @@ def base64_doc(text):
 
 
 def gzencode_find(text):
-    if 'eJy0' in text:
-        return True
-    if 'eJy8' in text:
-        return True
-    if 'eJyc' in text:
-        return True
-    if 'eJyM' in text:
-        return True
-    if 'eJys' in text:
-        return True
-    if 'eJyU' in text:
-        return True
-    if 'eJzc' in text:
-        return True
-    if 'eJzE' in text:
-        return True
-    if 'eJzk' in text:
-        return True
-    if 'eJzM' in text:
-        return True
-    if 'eJzs' in text:
-        return True
-    if 'eJzt' in text:
-        return True
-    if 'eJzU' in text:
+    if '7b0HYBxJliUmL23K' in text:
         return True
     if 'cG93ZXJzaGVsbC' in text:
         return True
@@ -635,13 +766,30 @@ def basethreetwelve_find(text):
         return True
 
 
-def save_file(text, type, key):
-    print('%s: %s' % (type, key))
-    outfile = pastes_dir + key + "." + type
+def basebash_find(text):
+    if 'IyEvYmluL2Jhc2' in text:
+        return True
+    if 'IyEvYmluL3No' in text:
+        return True
+    if 'L2Jpbi9iYXNo' in text:
+        return True
+    if 'L2Jpbi9za' in text:
+        return True
+    if 'IyEgL3Vzci9iaW4vZW52IHB5dGhvb' in text:
+        return True
+    if 'IyEvdXNyL2Jpbi9lbnYgcHl0aG9' in text:
+        return True
+    if 'IyEvdXNyL2Jpbi9weXRob2' in text:
+        return True
+
+
+def save_file(text, detect_type, key):
+    print('%s: %s' % (detect_type, key))
+    outfile = pastes_dir + key + "." + detect_type
     if not os.path.exists(outfile):
-        file = open(outfile, 'w')
-        file.write(text)
-        file.close()
+        f = open(outfile, 'w')
+        f.write(text)
+        f.close()
         return
     else:
         print("paste already exists: " + outfile)
@@ -651,206 +799,102 @@ def save_file(text, type, key):
 def save_raw(text, key):
     rawfile = originals_dir + key
     if not os.path.exists(rawfile):
-        file = open(rawfile, 'w')
-        file.write(text)
-        file.close()
+        f = open(rawfile, 'w')
+        f.write(text)
+        f.close()
         return
     else:
         print("paste already exists: " + rawfile)
         return
 
 
+# The line below would be a more elegant way to build a function list,
+# but it doesn't work and you can't control order for performance
+# find_functions = [f for f in dir() if f[0] is not '_' and f.endswith('_find')]
+
+find_functions = [base64_find, basebash_find, gzencode_find, basegzip_find,
+                  basebin_find, basehex_find, baserot_find, bin_find,
+                  basethreetwelve_find, dec_find, doublebase_find,
+                  doublewidebase_find, exe_find, gzencode_find, hexbase_find,
+                  hexbin_find, posh_find, hex_find]
 params = {'limit': limit}
 r = requests.get(url_pastebin_scraping, params)
-response = r.json()
-
+try:
+    response = r.json()
+except json.decoder.JSONDecodeError:
+    print('JSONDecodeError')
+    print('raw response from ' + url_pastebin_scraping + ': ' + r.content)
+    sys.exit(1)
 logfile = open(logfile, 'a+')
 counter = 0
-bytes = 0
+byte_counter = 0
 for paste in response:
     title = paste["title"]
-    type = paste["syntax"]
+    syntax = paste["syntax"]
     expire = paste["expire"]
     user = paste["user"]
     key = paste["key"]
     date = paste["date"]
     size = int(paste["size"])
-    if (size > 3000 and not os.path.exists(originals_dir + key)):
-        counter += 1
-        bytes += size
-        url = paste["scrape_url"]
-        r = requests.get(url)
-        if exe_find(r.content):
-            type = "exe"
-            save_file(r.content, type, key)
+    if not os.path.exists(originals_dir + key):
+        if any(user.lower() == username.lower() for username in userlist):
+            detect_type = "user_" + user
+            save_file(r.content, detect_type, key)
             save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
+            logentry = {
+                'paste':str(key),
+                'type':str(detect_type),
+                'title':str(title),
+                'user':str(user),
+                'syntax':str(syntax),
+                'date':str(date),
+                'expiration':str(expire),
+            }
+            jlo = json.dumps(logentry)
+            logfile.write(jlo + '\n')
             break
-        if b64_find(r.content):
-            type = "base64"
-            save_file(r.content, type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if hex_find(r.content):
-            type = "hex"
-            save_file(r.content, type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if bin_find(r.content):
-            type = "bin"
-            save_file(r.content, type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if hexbase_find(r.content):
-            type = "hexbase"
-            save_file(r.content, type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if dec_find(r.content):
-            type = "dec"
-            save_file(r.content, type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if posh_find(r.content):
-            type = "posh"
-            save_file(r.content, type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if doublebase_find(r.content):
-            type = "2xbase64"
-            save_file(r.content, type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if b64_find(r.content[::-1]):
-            type = "base64"
-            save_file(r.content[::-1], type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if hex_find(r.content[::-1]):
-            type = "hex"
-            save_file(r.content[::-1], type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if bin_find(r.content[::-1]):
-            type = "bin"
-            save_file(r.content[::-1], type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if hexbase_find(r.content[::-1]):
-            type = "hexbase"
-            save_file(r.content[::-1], type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if dec_find(r.content[::-1]):
-            type = "dec"
-            save_file(r.content[::-1], type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if doublebase_find(r.content[::-1]):
-            type = "2xbase64"
-            save_file(r.content[::-1], type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if basegzip_find(r.content):
-            type = "basegzip"
-            save_file(r.content, type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if basegzip_find(r.content[::-1]):
-            type = "basegzip"
-            save_file(r.content[::-1], type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-
-# EXPERIMENTAL DETECTION BELOW THIS LINE
-
-        if basethreetwelve_find(r.content):
-            type = "basethreetwelve"
-            save_file(r.content, type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if basethreetwelve_find(r.content[::-1]):
-            type = "basethreetwelve"
-            save_file(r.content[::-1], type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if base64_doc(r.content):
-            type = "base64_doc"
-            save_file(r.content, type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if base64_doc(r.content[::-1]):
-            type = "base64_doc"
-            save_file(r.content[::-1], type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if baserot_find(r.content):
-            type = "baserot"
-            save_file(r.content, type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-        if baserot_find(r.content[::-1]):
-            type = "baserot"
-            save_file(r.content[::-1], type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-        if hexbin_find(r.content):
-            type = "hexbin"
-            save_file(r.content, type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if hexbin_find(r.content[::-1]):
-            type = "hexbin"
-            save_file(r.content[::-1], type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if basebin_find(r.content):
-            type = "basebin"
-            save_file(r.content, type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if basebin_find(r.content[::-1]):
-            type = "basebin"
-            save_file(r.content, type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if basehex_find(r.content):
-            type = "basehex"
-            save_file(r.content, type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
-        if basehex_find(r.content[::-1]):
-            type = "basehex"
-            save_file(r.content[::-1], type, key)
-            save_raw(r.content, key)
-            logfile.write('%s,%s,%s,%s,%s,%s\n' % (type, key, title, user, date, expire))
-            break
+        if (size > min_size):
+            counter += 1
+            byte_counter += size
+            url = paste["scrape_url"]
+            r = requests.get(url)
+            forward_text = r.content
+            reverse_text = forward_text[::-1]
+            for fn in find_functions:
+                if fn(forward_text):
+                    detect_type = str(fn).split('_')[0].split(' ')[1]
+                    save_file(forward_text, detect_type, key)
+                    save_raw(forward_text, key)
+                    logentry = {
+                        'paste':str(key),
+                        'type':str(detect_type),
+                        'title':str(title),
+                        'user':str(user),
+                        'syntax':str(syntax),
+                        'date':str(date),
+                        'expiration':str(expire)
+                    }
+                    jlo = json.dumps(logentry)
+                    logfile.write(jlo + '\n')
+                    break
+                if fn(reverse_text):
+                    detect_type = str(fn).split('_')[0].split(' ')[1]
+                    save_file(reverse_text, detect_type, key)
+                    save_raw(forward_text, key)
+                    logentry = {
+                        'paste':str(key),
+                        'type':str(detect_type),
+                        'title':str(title),
+                        'user':str(user),
+                        'syntax':str(syntax),
+                        'date':str(date),
+                        'expiration':str(expire)
+                    }
+                    jlo = json.dumps(logentry)
+                    logfile.write(jlo + '\n')
+                    break
 
 end = time.time()
 print("documents read: " + str(counter))
-print("bytes read: " + str(bytes))
+print("bytes scanned: " + str(byte_counter))
 print("run time: " + str(end - start))
