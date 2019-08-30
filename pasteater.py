@@ -1,8 +1,9 @@
-import requests
-import os
-import time
-import re
 import json
+import os
+import re
+import requests
+import sys
+import time
 
 start = time.time()
 url_pastebin_scraping = 'https://scrape.pastebin.com/api_scraping.php'
@@ -80,6 +81,7 @@ def posh_find(text):
 
 
 def dec_find(text):
+    # decimal encoded PE preambles
     dec_search_terms = ['77 90 144 0 3 0 4 0', '77 90 232 0 0 0 0 91',
                         '77 90 144 0 3 0 0 0', '77 90 80 0 2 0 0 0',
                         '77 90 0 0 0 0 0 0', '77 90 65 82 85 72 137 229',
@@ -100,6 +102,7 @@ def dec_find(text):
 
 
 def bin_find(text):
+    # binary encoded PE preambles with spacing variations
     bin_search_terms = ['010011010101101000000000000000000000000000000000',
                         '010011010101101001000001010100100101010101001000',
                         '010011010101101001010000000000000000001000000000',
@@ -124,6 +127,7 @@ def bin_find(text):
 
 
 def base64_find(text):
+    # base64 encoded PE preambles and a couple PE header keywords
     base64_search_terms = ['TVqQAAMAAAAEAAAA', 'TVpQAAIAAAAEAA8A',
                            'TVoAAAAAAAAAAAAA', 'TVpBUlVIieVIgewg',
                            'TVqAAAEAAAAEABAA', 'TVroAAAAAFtSRVWJ',
@@ -135,6 +139,7 @@ def base64_find(text):
 
 
 def doublebase_find(text):
+    # two rounds of base64 encoding of PE preambles
     double_search_terms = ['VFZxUUFBTUFBQUFFQUFBQ', 'VFZwUUFBSUFBQUFFQUE4Q',
                            'VFZvQUFBQUFBQUFBQUFBQ', 'VFZwQlVsVklpZVZJZ2V3Z',
                            'VFZxQUFBRUFBQUFFQUJBQ', 'VFZyb0FBQUFBRnRTUlZXS',
@@ -145,6 +150,7 @@ def doublebase_find(text):
 
 
 def doublewidebase_find(text):
+    # two rounds of base64 encoding with one round of null padding
     doublewide_search_terms = ['VABWAHEAUQBBAEEATQBBAEEAQQBBAEUAQQBBAEEAQQ',
                                'VABWAHAAUQBBAEEASQBBAEEAQQBBAEUAQQBBADgAQQ',
                                'VABWAG8AQQBBAEEAQQBBAEEAQQBBAEEAQQBBAEEAQQ',
@@ -160,6 +166,7 @@ def doublewidebase_find(text):
 
 
 def exe_find(text):
+    # raw PE preamble byte sequences
     exe_search_terms = ['\x4d\x5a\x90\x00\x03\x00\x00\x00',
                         '\x4d\x5a\x50\x00\x02\x00\x00\x00',
                         '\x4d\x5a\x00\x00\x00\x00\x00\x00',
@@ -173,6 +180,7 @@ def exe_find(text):
 
 
 def hex_find(text):
+    # hex encoded PE preambles
     txtlower = text.lower()
     hex_search_terms = ['4d5a900003000000', '4d5a500002000000',
                         '4d5a000000000000', '4d5a4152554889e5',
@@ -181,11 +189,13 @@ def hex_find(text):
     for term in hex_search_terms:
         if term in txtlower:
             return True
+    # regex that handles all of the hex byte separations (see above)
     if HEX_PE.search(txtlower):
         return True
 
 
 def hexbase_find(text):
+    # when PE preambles are base64 encoded then hex encoded, plus spacing
     txtlower = text.lower()
     hexbase_search_terms = ['5456715141414d414141414541414141',
                             '54 56 71 51 41 41 4d 41 41 41 41 45 41 41 41 41',
@@ -207,6 +217,7 @@ def hexbase_find(text):
 
 
 def basehex_find(text):
+    # when PE preambles are binary encoded (plus spacing) then base64 encoded
     basehex_search_terms = ['NGQ1YTkwMDAwMzAwMDAwMA', 'NEQ1QTkwMDAwMzAwMDAwMA',
                             'NGQ1YTUwMDAwMjAwMDAwMA', 'NEQ1QTUwMDAwMjAwMDAwMA',
                             'NGQ1YTAwMDAwMDAwMDAwMA', 'NEQ1QTAwMDAwMDAwMDAwMA',
@@ -256,6 +267,7 @@ def basehex_find(text):
 
 
 def hexbin_find(text):
+    # when PE preambles are binary encoded then hex encoded, plus spacing
     hexbin_search_terms = ['303130303131303130313031313031303030303030303030303030303030303030303030303030303030303030303030',
                            '303130303131303130313031313031303031303030303031303130313030313030313031303130313031303031303030',
                            '303130303131303130313031313031303031303130303030303030303030303030303030303031303030303030303030',
@@ -274,6 +286,7 @@ def hexbin_find(text):
 
 
 def basebin_find(text):
+    # when PE preambles are binary encoded (plus spacing) then base64 encoded
     basebin_search_terms = ['MDEwMDExMDEwMTAxMTAxMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAw',
                             'MDEwMDExMDEwMTAxMTAxMDAxMDAwMDAxMDEwMTAwMTAwMTAxMDEwMTAxMDAxMDAw',
                             'MDEwMDExMDEwMTAxMTAxMDAxMDEwMDAwMDAwMDAwMDAwMDAwMDAxMDAwMDAwMDAw',
@@ -298,6 +311,7 @@ def basebin_find(text):
 
 
 def basegzip_find(text):
+    # when PE preambles are gzip compressed (with headers) then base64 encoded
     basegzip_search_terms = ['H4sIAAAAAAAEAO18', 'H4sIAAAAAAAEAO19',
                              'H4sIAAAAAAAEAOy9', 'H4sIAAAAAAAEAO29',
                              'H4sIAAAAAAAEAOS9', 'H4sIAAAAAAAEAOy8',
@@ -309,6 +323,7 @@ def basegzip_find(text):
 
 
 def baserot_find(text):
+    # when PE preambles are base64 encoded then rot13 encoded
     baserot_search_terms = ['GIdDNNZNNNNRNNNN', 'GIcDNNVNNNNRNN8N',
                             'GIbNNNNNNNNNNNNN', 'GIcOHyIVvrIVtrjt',
                             'GIdNNNRNNNNRNONN', 'GIebNNNNNSgFEIJW',
@@ -319,6 +334,7 @@ def baserot_find(text):
 
 
 def base64_doc(text):
+    # when common Office file formats are base64 encoded
     basedoc_search_terms = ['0M8R4KGxGuEAAAAAAAAAAAAAAAAAAAAA',
                             'UEsDBBQABgAIAAAAIQ',
                             'UEsDBBQACAAIAAAAAA',
@@ -334,14 +350,17 @@ def base64_doc(text):
 
 
 def gzencode_find(text):
-    gzencode_search_terms = ['7b0HYBxJliUmL23K', 'cG93ZXJzaGVsbC',
-                             'UG93ZXJTaGVsbC']
+    # when PE preambles are gzip compressed (no headers) then base64 encoded
+    gzencode_search_terms = ['7b0HYBxJliUmL2', 'cG93ZXJzaGVsbC',
+                             'UG93ZXJTaGVsbC', 'tL0HfFzFET/+7t',
+                             '7XwJdFxXkWi9pd', '7XsLdBzVleCtqu']
     for term in gzencode_search_terms:
         if term in text:
             return True
 
 
 def basethreetwelve_find(text):
+    # PE preambles base64 encoded then decimal encoded plus 312
     base312_search_terms = ['396 398 425 393 377 377 389 377 377 377 377 381 377 377 377 377',
                             '396 398 424 393 377 377 385 377 377 377 377 381 377 377 368 377',
                             '396 398 423 377 377 377 377 377 377 377 377 377 377 377 377 377',
@@ -357,6 +376,7 @@ def basethreetwelve_find(text):
 
 
 def basebash_find(text):
+    # indicators of bash or python scripts that have been base64 encoded
     basebash_search_terms = ['IyEvYmluL2Jhc2', 'IyEvYmluL3No', 'L2Jpbi9iYXNo',
                              'L2Jpbi9za', 'IyEgL3Vzci9iaW4vZW52IHB5dGhvb',
                              'IyEvdXNyL2Jpbi9lbnYgcHl0aG9',
@@ -404,9 +424,8 @@ params = {'limit': limit}
 r = requests.get(url_pastebin_scraping, params)
 try:
     response = r.json()
-except json.decoder.JSONDecodeError:
-    print('JSONDecodeError')
-    print('raw response from ' + url_pastebin_scraping + ': ' + r.content)
+except ValueError:
+    print('ERROR: JSON ValueError, raw response from ' + url_pastebin_scraping + ': ' + r.content)
     sys.exit(1)
 logfile = open(logfile, 'a+')
 counter = 0
