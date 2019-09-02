@@ -9,7 +9,6 @@ rule revengerat {
     $revconf2 = "Revenge-RAT" wide
     $modconf1 = "]NK["
     $modconf2 = "Revenge"
-    $str1 = "RV_MUTEX" wide
     $str2 = "Select * from AntiVirusProduct" wide
     $str3 = "SELECT * FROM FirewallProduct" wide
     $str4 = "select * from Win32_Processor" wide
