@@ -1,3 +1,8 @@
+#  TODO:
+#  1. strip tabs
+#  2. strip 1quotes, 2quotes, commas, and parens
+#  3. strip '0x' and commas from hex
+
 import os
 import glob
 import re
@@ -9,11 +14,11 @@ import magic
 
 mimetype = magic.Magic(mime=True)
 pastes_dir = '/home/ubuntu/pastes/'	 # trailing slash is IMPORTANT here
-BASE64_REGEX = re.compile('TV(oAAA|pBUl|pQAA|qAAA|qQAA|roAA)[A-Za-z0-9/+]{112,}[\=]{0,2}')
-B64URLSAFE_REGEX = re.compile('TV(oAAA|pBUl|pQAA|qAAA|qQAA|roAA)[A-Za-z0-9_-]{112,}[\=]{0,2}')
+BASE64_REGEX = re.compile('TV(oAAA|pBUl|pQAA|qAAA|qQAA|roAA|pFUu)[A-Za-z0-9/+]{112,}[\=]{0,2}')
+B64URLSAFE_REGEX = re.compile('TV(oAAA|pBUl|pQAA|qAAA|qQAA|roAA|pFUu)[A-Za-z0-9_-]{112,}[\=]{0,2}')
 DECSP_REGEX = re.compile('77\ 90\ (144\ 0\ 3\ 0\ 4\ 0|232\ 0\ 0\ 0\ 0\ 91|144\ 0\ 3\ 0\ 0\ 0|80\ 0\ 2\ 0\ 0\ 0|0\ 0\ 0\ 0\ 0\ 0|65\ 82\ 85\ 72\ 137\ 229|128\ 0\ 1\ 0\ 0\ 0|144\ 0\ 3\ 0\ 4\ 0|232\ 0\ 0\ 0\ 0\ 91)[0-9\ ]{254,}')
 DECCM_REGEX = re.compile('77,90,(144,0,3,0,4,0|232,0,0,0,0,91|144,0,3,0,0,0|80,0,2,0,0,0|0,0,0,0,0,0|65,82,85,72,137,229|128,0,1,0,0,0|144,0,3,0,4,0|232,0,0,0,0,91)[0-9,]{254,}[0-9]{1}')
-HEX_REGEX = re.compile('4d5a(00000000|41525548|50000200|80000100|90000300|e8000000)[a-f0-9]{254,}', re.IGNORECASE)
+HEX_REGEX = re.compile('4d5a(00000000|41525548|50000200|80000100|90000300|e8000000|4552e8000000)[a-f0-9]{254,}', re.IGNORECASE)
 HEXBASE_REGEX = re.compile('5456(71514141|70514141|6f414141|7042556c|71414141|726f4141)[a-f0-9]{254,}', re.IGNORECASE)
 BIN_REGEX = re.compile('0100110101011010(00000000000000000000000000000000|01000001010100100101010101001000|01010000000000000000001000000000|10000000000000000000000100000000|10010000000000000000001100000000|11101000000000000000000000000000)[0-1]{1000,}')
 GZ64_REGEX = re.compile('H4sIA[A-Za-z0-9/+]{252,}[\=]{0,2}')
@@ -202,7 +207,7 @@ def base312dump(text):
 
 def write_file(data, filename):
     if not os.path.exists(filename):
-        file = open(filename, 'w')
+        file = open(filename, 'wb')
         file.write(data)
         file.close()
         return

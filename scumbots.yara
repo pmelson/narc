@@ -162,8 +162,11 @@ rule base64_find {
     $base64_search_term5 = "TVroAAAAAFtSRVWJ"
     $base64_search_term6 = "TVqQAAMABAAAAAAA"
     $base64_search_term7 = "TVpBUlVIieVIgewgAAAA"
-    $base64_search_term8 = "kJCQkE1aQVJVSInlSIHsIAAAA"
-    $base64_search_term9 = "pcyBwcm9ncm"
+    $base64_search_term8 = "TVpFUugAAAAAW0iD"
+    $base64_search_term9 = "kJCQkE1aQVJVSInlSIHsIAAAA"
+    $base64_search_term10 = "pcyBwcm9ncm"
+    $base64_search_term11 = "lzIHByb2dyY"
+    $base64_search_term12 = "aXMgcHJvZ3J"
   condition:
     any of them
 }
@@ -234,7 +237,7 @@ rule hex_find {
     $hex_search_term4 = "4d5a800001000000" nocase
     $hex_search_term5 = "4d5a900003000400" nocase
     $hex_search_term6 = "4d5ae8000000005b" nocase
-    $hex_pe_regex = /4d[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}5a[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|41|50|80|90|e8)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|52)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|01|02|03|55)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|48)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|04|89)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|5b|e5)/
+    $hex_pe_regex = /4d[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}5a[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|41|50|80|90|e8)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|52)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|01|02|03|55)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|48)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|04|89)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|5b|e5)/ nocase
   condition:
     any of them
 }
