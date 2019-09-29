@@ -14,7 +14,21 @@ originals_dir = '/home/ubuntu/pastes/origraw/'  # Trailing slash is important he
 logfile = pastes_dir + 'pastes.json'
 
 # compile regular expression for hex_find function
-HEX_PE = re.compile('4d[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}5a[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|41|50|80|90|e8)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|52)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|01|02|03|55)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|48)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|04|89)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|5b|e5)')
+HEX_PE = re.compile('4d[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}5a[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|41|45|50|80|90|e8)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|52)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|01|02|03|55|e8)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|48)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|04|89)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|5b|e5)')
+
+# character lists for character set comparison checkCharset()
+base64_charset = ['+', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
+                  'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+                  'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+                  'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
+                  'w', 'x', 'y', 'z']
+hex_charset = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
+               'c', 'd', 'e', 'f']
+bin_charset = ['0', '1']
+dec_charset = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+drop_list1 = [' ', ',']
+drop_list2 = ['\\', 'x', ' ', ',']
 
 # list of suspicious accounts to track no matter what they post
 # this should spin out into its own project
@@ -132,7 +146,8 @@ def base64_find(text):
                            'TVoAAAAAAAAAAAAA', 'TVpBUlVIieVIgewg',
                            'TVqAAAEAAAAEABAA', 'TVroAAAAAFtSRVWJ',
                            'TVqQAAMABAAAAAAA', 'TVpBUlVIieVIgewgAAAA',
-                           'kJCQkE1aQVJVSInlSIHsIAAAA', 'pcyBwcm9ncm']
+                           'TVpFUugAAAAAW0iD', 'kJCQkE1aQVJVSInlSIHsIAAAA',
+                           'lzIHByb2dyY', 'pcyBwcm9ncm', 'aXMgcHJvZ3J']
     for term in base64_search_terms:
         if term in text:
             return True
@@ -185,7 +200,7 @@ def hex_find(text):
     hex_search_terms = ['4d5a900003000000', '4d5a500002000000',
                         '4d5a000000000000', '4d5a4152554889e5',
                         '4d5a800001000000', '4d5a900003000400',
-                        '4d5ae8000000005b']
+                        '4d5ae8000000005b', '4d5a4552e8000000']
     for term in hex_search_terms:
         if term in txtlower:
             return True
@@ -353,7 +368,8 @@ def gzencode_find(text):
     # when PE preambles are gzip compressed (no headers) then base64 encoded
     gzencode_search_terms = ['7b0HYBxJliUmL2', 'cG93ZXJzaGVsbC',
                              'UG93ZXJTaGVsbC', 'tL0HfFzFET/+7t',
-                             '7XwJdFxXkWi9pd', '7XsLdBzVleCtqu']
+                             '7XwJdFxXkWi9pd', '7XsLdBzVleCtqu',
+                             '7b15fBzFsTheM7']
     for term in gzencode_search_terms:
         if term in text:
             return True
@@ -460,7 +476,7 @@ for paste in response:
             byte_counter += size
             url = paste["scrape_url"]
             r = requests.get(url)
-            forward_text = r.content
+            forward_text = str(r.content)
             reverse_text = forward_text[::-1]
             for fn in find_functions:
                 if fn(forward_text):
