@@ -4,14 +4,12 @@ import glob
 import re
 import requests
 import json
-import urllib
-import urllib2
 import dns.resolver
 import hashlib
 import time
-from twitter import *
+import twitter
 
-vti_api_key = ''  # put your VirusTotal API key here
+vti_api_key = '[your api key here]'
 vti_upload_url = 'https://www.virustotal.com/vtapi/v2/file/scan'
 vti_comment_url = 'https://www.virustotal.com/vtapi/v2/comments/put'
 bamfdetect = '/home/ubuntu/src/bamfdetect/bamfdetect'
@@ -23,14 +21,16 @@ DOMAIN_REGEX = re.compile('([a-z0-9][a-z0-9\-]{0,61}[a-z0-9]\.)+[a-z0-9][a-z0-9\
 IPV4_REGEX = re.compile('[1-2]?[0-9]?[0-9]\.[1-2]?[0-9]?[0-9]\.[1-2]?[0-9]?[0-9]\.[1-2]?[0-9]?[0-9]')
 ipinfo_url = 'http://ipinfo.io/'
 myResolver = dns.resolver.Resolver()
-myResolver.nameservers = ['172.30.0.2', '8.8.8.8']  # edit for local DNS nameservers
-config = {}
-execfile("/home/ubuntu/twitter_config.py", config)  # Twitter secrets file
+myResolver.nameservers = ['172.30.0.2', '8.8.8.8']
+twitter_config = {}
+exec(open("/home/ubuntu/twitter_config.py").read(), twitter_config)
 
 
 def BAMFrun(file):
     runcmd = bamfdetect + " " + file
     bamfout = os.popen(runcmd).read().rstrip(',\n')
+    if len(bamfout) == 0:
+        return "None","None","None"
     try:
         result = json.loads(bamfout)
         for filekey in result.keys():
@@ -41,22 +41,19 @@ def BAMFrun(file):
             except:
                 c2 = ""
                 for a in result[filekey]["information"]["c2s"]:
-                    c2 += a["c2_uri"] + ","
-        return type, hash, c2
+                    c2+=a["c2_uri"]+","
+        return type,hash,c2
     except:
-        with open(file) as f:
-            raw = f.read()
-        f.close()
-        m = hashlib.md5()
-        m.update(raw)
-        hash = m.hexdigest()
-        return "None", hash, "None"
+        return "None","None","None"
 
 
 def tweet(status):
     try:
-        twitter = Twitter(auth = OAuth(config["access_key"], config["access_secret"], config["consumer_key"], config["consumer_secret"]))
-        results = twitter.statuses.update(status = status)
+        MyTwitter = twitter.Api(access_token_key=twitter_config["access_key"],
+                                access_token_secret=twitter_config["access_secret"],
+                                consumer_key=twitter_config["consumer_key"],
+                                consumer_secret=twitter_config["consumer_secret"])
+        results = MyTwitter.PostUpdate(status)
         print("updated status: %s" % status)
     except:
         print(status)
@@ -72,39 +69,58 @@ def vt_upload(file):
 
 
 def vt_comment(comment,md5):
-    params = {"resource": md5,
-              "comment": comment,
-              "apikey": vti_api_key}
-    data = urllib.urlencode(params)
-    req = urllib2.Request(vti_comment_url, data)
-    r = urllib2.urlopen(req)
+    params = {"resource": md5, "comment": comment, "apikey": vti_api_key}
+    r = requests.post(vti_comment_url, params=params)
+    response = r.json()
 
 
 def isip(string):
-    if IPV4_REGEX.search(string) and string != "127.0.0.1" and not string.startswith("10.") and not string.startswith("192.168.") and not string.startswith("172.16."):
+    if IPV4_REGEX.search(string) and string != "127.0.0.1" and not string.startswith("10.") and not string.startswith("192.168."):
         return True
 
 
 def getipinfo(ipaddr):
+    loc = ''
+    city = ''
+    region = ''
+    hostname = ''
+    country = ''
+    org = ''
+    postal = ''
     if isip(ipaddr):
         url = ipinfo_url + ipaddr
         r = requests.get(url)
         if r.status_code == 200:
             response = r.json()
-            loc = response["loc"]
-            city = response["city"]
-            region = response["region"]
+            try:
+                loc = response["loc"]
+            except:
+                pass
+            try:
+                city = response["city"]
+            except:
+                pass
+            try:
+                region = response["region"]
+            except:
+                pass
             try:
                 hostname = response["hostname"]
             except:
-                hostname = ''
+                pass
+            try:
                 country = response["country"]
+            except:
+                pass
+            try:
                 org = response["org"]
+            except:
+                pass
             try:
                 postal = response["postal"]
             except:
-                postal = ''
-                return loc, city, region, hostname, country, org, postal
+                pass
+            return loc,city,region,hostname,country,org,postal
         else:
             print("Problem connecting to: " + url)
             sys.exit(1)
@@ -119,7 +135,7 @@ exelist = glob.glob(ls)
 for filename in exelist:
     base = os.path.basename(filename)
     paste = os.path.splitext(base)[0]
-    type, hash, c2 = BAMFrun(filename)
+    type,hash,c2 = BAMFrun(filename)
     stored_file = done_dir + base + "_" + hash
     stored_file = done_dir + base + "_" + hash
     if not os.path.isfile(stored_file) and not (type == 'None'):
@@ -129,7 +145,7 @@ for filename in exelist:
         if len(message) > 280:
             message = message[:280]
         tweet(message)
-        time.sleep(30)
+        time.sleep(15)
         comment = type + " found at https://pastebin.com/" + paste + " SHA256: " + hash + " C2: " + c2
         vt_comment(comment,hash)
         new_filename = stored_file
@@ -147,18 +163,18 @@ for filename in exelist:
                     fqdn = "err"
                 if fqdn != "err":
                     try:
-                        ipaddr = str(myResolver.query(fqdn, 'A')[0])
+                      ipaddr = str(myResolver.query(fqdn, 'A')[0])
                     except:
-                        ipaddr = "err"
-                        loc = "err"
-                        city = "err"
-                        region = "err"
-                        hostname = "err"
-                        country = "err"
-                        org = "err"
-                        postal = "err"
+                      ipaddr = "err"
+                      loc = "err"
+                      city = "err"
+                      region = "err"
+                      hostname = "err"
+                      country = "err"
+                      org = "err"
+                      postal = "err"
             if ipaddr != "err" and isip(ipaddr):
-                loc, city, region, hostname, country, org, postal = getipinfo(ipaddr)
+                loc,city,region,hostname,country,org,postal = getipinfo(ipaddr)
                 logentry = {
                     'paste':str(paste),
                     'hash':str(hash),
@@ -166,12 +182,12 @@ for filename in exelist:
                     'c2':str(c2),
                     'fqdn':str(fqdn),
                     'ipaddr':str(ipaddr),
-                    'loc':(loc).encode('utf-8'),
-                    'city':(city).encode('utf-8'),
-                    'region':(region).encode('utf-8'),
+                    'loc':(loc.encode('utf-8')),
+                    'city':(city.encode('utf-8')),
+                    'region':(region.encode('utf-8')),
                     'hostname':str(hostname),
                     'country':str(country),
-                    'org':str(org),
+                    'org':str(org.encode('utf-8')),
                     'postal':str(postal)
                 }
                 jlo = json.dumps(logentry)

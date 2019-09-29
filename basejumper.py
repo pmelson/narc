@@ -1,8 +1,3 @@
-#  TODO:
-#  1. strip tabs
-#  2. strip 1quotes, 2quotes, commas, and parens
-#  3. strip '0x' and commas from hex
-
 import os
 import glob
 import re
