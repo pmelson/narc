@@ -402,11 +402,39 @@ def basebash_find(text):
             return True
 
 
+def checkCharset(filebytes):
+    file_charset = sorted(set(filebytes))
+    if '=' in file_charset:
+        file_charset.remove('=')
+    if file_charset == base64_charset:
+        perfect_match = 'base64'
+        return perfect_match
+    for a in drop_list1:
+        if a in file_charset:
+            file_charset.remove(a)
+    if file_charset == bin_charset:
+        perfect_match = 'bin'
+        return perfect_match
+    if file_charset == dec_charset:
+        perfect_match = 'dec'
+        return perfect_match
+    file_charset = sorted(set(filebytes.lower()))
+    for a in drop_list2:
+        if a in file_charset:
+            file_charset.remove(a)
+    if file_charset == hex_charset:
+        perfect_match = 'hex'
+        return perfect_match
+    else:
+        perfect_match = 'None'
+    return perfect_match
+
+
 def save_file(text, detect_type, key):
     print('%s: %s' % (detect_type, key))
     outfile = pastes_dir + key + "." + detect_type
     if not os.path.exists(outfile):
-        f = open(outfile, 'w')
+        f = open(outfile, 'wb')
         f.write(text)
         f.close()
         return
@@ -418,7 +446,7 @@ def save_file(text, detect_type, key):
 def save_raw(text, key):
     rawfile = originals_dir + key
     if not os.path.exists(rawfile):
-        f = open(rawfile, 'w')
+        f = open(rawfile, 'wb')
         f.write(text)
         f.close()
         return
@@ -476,10 +504,10 @@ for paste in response:
             byte_counter += size
             url = paste["scrape_url"]
             r = requests.get(url)
-            forward_text = str(r.content)
+            forward_text = r.content
             reverse_text = forward_text[::-1]
             for fn in find_functions:
-                if fn(forward_text):
+                if fn(str(forward_text)):
                     detect_type = str(fn).split('_')[0].split(' ')[1]
                     save_file(forward_text, detect_type, key)
                     save_raw(forward_text, key)
@@ -495,9 +523,26 @@ for paste in response:
                     jlo = json.dumps(logentry)
                     logfile.write(jlo + '\n')
                     break
-                if fn(reverse_text):
+                if fn(str(reverse_text)):
                     detect_type = str(fn).split('_')[0].split(' ')[1]
                     save_file(reverse_text, detect_type, key)
+                    save_raw(forward_text, key)
+                    logentry = {
+                        'paste':str(key),
+                        'type':str(detect_type),
+                        'title':str(title),
+                        'user':str(user),
+                        'syntax':str(syntax),
+                        'date':str(date),
+                        'expiration':str(expire)
+                    }
+                    jlo = json.dumps(logentry)
+                    logfile.write(jlo + '\n')
+                    break
+                match = checkCharset(forward_text.decode())
+                if match != 'None':
+                    detect_type = match
+                    save_file(forward_text, detect_type, key)
                     save_raw(forward_text, key)
                     logentry = {
                         'paste':str(key),

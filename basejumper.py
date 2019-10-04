@@ -5,7 +5,7 @@ import base64
 import binascii
 import zlib
 import magic
-
+import codecs
 
 mimetype = magic.Magic(mime=True)
 pastes_dir = '/home/ubuntu/pastes/'	 # trailing slash is IMPORTANT here
@@ -108,7 +108,7 @@ def hexdump(text):
         print("hex matched")
         match = HEX_REGEX.search(text)
         try:
-            bin = match.group(0).decode('hex')
+            bin = codecs.decode(match.group(0), 'hex')
             return bin
         except:
             print("Error decoding hex")
@@ -118,7 +118,7 @@ def hexdump(text):
         print("hexbase matched")
         match = HEXBASE_REGEX.search(text)
         try:
-            bin = match.group(0).decode('hex')
+            bin = codecs.decode(match.group(0), 'hex')
             return bin
         except:
             print("Error decoding hex")
@@ -191,7 +191,7 @@ def base312dump(text):
         try:
             for a in base_string.split(" "):
                 b = int(a) - 312
-                decoded_string = decoded_string + chr(b)
+                decoded_string += chr(b)
             bin = base64.b64decode(decoded_string)
             return bin
         except:

@@ -30,7 +30,13 @@ def BAMFrun(file):
     runcmd = bamfdetect + " " + file
     bamfout = os.popen(runcmd).read().rstrip(',\n')
     if len(bamfout) == 0:
-        return "None","None","None"
+        with open(file, 'rb') as f:
+            raw = f.read()
+        f.close()
+        m = hashlib.md5()
+        m.update(raw)
+        hash = m.hexdigest()
+        return "None",hash,"None"
     try:
         result = json.loads(bamfout)
         for filekey in result.keys():
