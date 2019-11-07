@@ -455,15 +455,13 @@ def save_raw(text, key):
         return
 
 
-# The line below would be a more elegant way to build a function list,
-# but it doesn't work and you can't control order for performance
-# find_functions = [f for f in dir() if f[0] is not '_' and f.endswith('_find')]
-
+# search functions in order of execution, can be used for performance tuning
 find_functions = [base64_find, basebash_find, gzencode_find, basegzip_find,
                   basebin_find, basehex_find, baserot_find, bin_find,
                   basethreetwelve_find, dec_find, doublebase_find,
                   doublewidebase_find, exe_find, gzencode_find, hexbase_find,
                   hexbin_find, posh_find, hex_find]
+
 params = {'limit': limit}
 r = requests.get(url_pastebin_scraping, params)
 try:
@@ -471,6 +469,7 @@ try:
 except ValueError:
     print('ERROR: JSON ValueError, raw response from ' + url_pastebin_scraping + ': ' + r.content)
     sys.exit(1)
+
 logfile = open(logfile, 'a+')
 counter = 0
 byte_counter = 0
@@ -482,8 +481,12 @@ for paste in response:
     key = paste["key"]
     date = paste["date"]
     size = int(paste["size"])
+
     if not os.path.exists(originals_dir + key):
+
         if any(user.lower() == username.lower() for username in userlist):
+            url = paste["scrape_url"]
+            r = requests.get(url)
             detect_type = "user_" + user
             save_file(r.content, detect_type, key)
             save_raw(r.content, key)
@@ -499,6 +502,7 @@ for paste in response:
             jlo = json.dumps(logentry)
             logfile.write(jlo + '\n')
             break
+
         if (size > min_size):
             counter += 1
             byte_counter += size
@@ -506,7 +510,9 @@ for paste in response:
             r = requests.get(url)
             forward_text = r.content
             reverse_text = forward_text[::-1]
+
             for fn in find_functions:
+
                 if fn(str(forward_text)):
                     detect_type = str(fn).split('_')[0].split(' ')[1]
                     save_file(forward_text, detect_type, key)
@@ -523,6 +529,7 @@ for paste in response:
                     jlo = json.dumps(logentry)
                     logfile.write(jlo + '\n')
                     break
+
                 if fn(str(reverse_text)):
                     detect_type = str(fn).split('_')[0].split(' ')[1]
                     save_file(reverse_text, detect_type, key)
@@ -539,7 +546,9 @@ for paste in response:
                     jlo = json.dumps(logentry)
                     logfile.write(jlo + '\n')
                     break
+
                 match = checkCharset(forward_text.decode())
+
                 if match != 'None':
                     detect_type = match
                     save_file(forward_text, detect_type, key)

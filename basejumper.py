@@ -21,7 +21,10 @@ GZENC_REGEX = re.compile('[a-zA-Z0-9/+]{250,}[\=]{0,2}')
 BASE312_REGEX = re.compile('396\ 398\ (379|424|425|426)\ (377|378|393|423)\ (377|381|397|419)[0-9\ ]{254,}')
 
 
-def decdump(text):
+def decdump(infile):
+    text = ''
+    for line in str(infile).splitlines():
+        text += line.rstrip()
     if DECSP_REGEX.search(text):
         print("decimal matched")
         match = DECSP_REGEX.search(text)
@@ -31,7 +34,7 @@ def decdump(text):
             for byte in elements:
                 decimal = int(byte, 10)
                 frame.append(decimal)
-            bin = str(frame)
+            bin = str(frame).encode()
             return bin
         except:
             print("Error decoding decimal")
@@ -46,7 +49,7 @@ def decdump(text):
             for byte in elements:
                 decimal = int(byte, 10)
                 frame.append(decimal)
-            bin = str(frame)
+            bin = str(frame).encode()
             return bin
         except:
             print("Error decoding decimal")
@@ -58,7 +61,11 @@ def decdump(text):
         return bin
 
 
-def bindump(text):
+def bindump(infile):
+    text = ''
+    for line in str(infile).splitlines():
+        text += line.rstrip()
+    text = text.replace(" ", "")
     if BIN_REGEX.search(text):
         print("binary matched")
         match = BIN_REGEX.search(text)
@@ -76,7 +83,10 @@ def bindump(text):
         return bin
 
 
-def basedump(text):
+def basedump(infile):
+    text = ''
+    for line in str(infile).splitlines():
+        text += line.rstrip()
     if BASE64_REGEX.search(text):
         print("base64 matched")
         match = BASE64_REGEX.search(text)
@@ -103,7 +113,12 @@ def basedump(text):
         return bin
 
 
-def hexdump(text):
+def hexdump(infile):
+    text = ''
+    for line in str(infile).splitlines():
+        text += line.rstrip()
+    text = text.replace("0x", "")
+    text = text.replace(",", "")
     if HEX_REGEX.search(text):
         print("hex matched")
         match = HEX_REGEX.search(text)
@@ -130,7 +145,22 @@ def hexdump(text):
         return bin
 
 
-def gz64dump(text):
+def hexbasedump(infile):
+    text = ''
+    for line in str(infile).splitlines():
+        text += line.rstrip()
+    text = text.replace(" ", "")
+    text = text.replace("#", "A")
+    bin = hexdump(text)
+    if not (bin == 'ERR'):
+        bin = basedump(bin)
+    return bin
+
+
+def gz64dump(infile):
+    text = ''
+    for line in str(infile).splitlines():
+        text += line.rstrip()
     if GZ64_REGEX.search(text):
         print("basegzip matched")
         match = GZ64_REGEX.search(text)
@@ -154,9 +184,15 @@ def gz64dump(text):
             print("Error, not PE file. File type detected: " + filetype)
             bin = "ERR"
             return bin
+    else:
+        bin = "ERR"
+        return bin
 
 
-def gzencdump(text):
+def gzencdump(infile):
+    text = ''
+    for line in str(infile).splitlines():
+        text += line.rstrip()
     if GZENC_REGEX.search(text):
         print("gzencode matched")
         match = GZENC_REGEX.search(text)
@@ -182,7 +218,11 @@ def gzencdump(text):
             return bin
 
 
-def base312dump(text):
+def base312dump(infile):
+    text = ''
+    for line in str(infile).splitlines():
+        text += line.rstrip()
+    text = text.replace(",", " ")
     if BASE312_REGEX.search(text):
         print("basethreetwelve matched")
         match = BASE312_REGEX.search(text)
@@ -210,131 +250,26 @@ def write_file(data, filename):
         print("paste already exists")
 
 
-ls = pastes_dir + '*.gzencode'
-gzlist = glob.glob(ls)
-for filename in gzlist:
-    print(filename)
-    raw = open(filename).readlines()
-    for n,line in enumerate(raw):
-        raw[n] = line.rstrip()
-    raw = ''.join(raw)
-    bin = gzencdump(raw)
-    if not (bin == 'ERR'):
-        base = os.path.basename(filename)
-        binout = pastes_dir + os.path.splitext(base)[0] + '.exe'
-        write_file(bin, binout)
-        os.remove(filename)
+decoding_tuples = [('base64', basedump), ('basegzip', gz64dump),
+                   ('basethreetwelve', base312dump), ('bin', bindump),
+                   ('dec', decdump), ('hex', hexdump),
+                   ('hexbase', hexbasedump), ('gzencode', gzencdump)]
 
-ls = pastes_dir + '*.bin'
-binlist = glob.glob(ls)
-for filename in binlist:
-    print(filename)
-    raw = open(filename).readlines()
-    for n,line in enumerate(raw):
-        raw[n]=line.rstrip()
-        raw[n]=raw[n].replace(" ", "")
-    raw = ''.join(raw)
-    bin = bindump(raw)
-    if not (bin == 'ERR'):
-        base = os.path.basename(filename)
-        binout = pastes_dir + os.path.splitext(base)[0] + '.exe'
-        write_file(bin, binout)
-        os.remove(filename)
+for decoder in decoding_tuples:
+    extension = decoder[0]
+    decoder_function = decoder[1]
+    files_list = glob.glob(pastes_dir + '*.' + extension)
 
-ls = pastes_dir + '*.base64'
-baselist = glob.glob(ls)
-for filename in baselist:
-    print(filename)
-    raw = open(filename).readlines()
-    for n,line in enumerate(raw):
-        raw[n]=line.rstrip()
-    raw = ''.join(raw)
-    bin = basedump(raw)
-    if not (bin == 'ERR'):
-        base = os.path.basename(filename)
-        binout = pastes_dir + os.path.splitext(base)[0] + '.exe'
-        write_file(bin, binout)
-        os.remove(filename)
+    for filename in files_list:
+        print(filename)
 
-ls = pastes_dir + '*.hex'
-hexlist = glob.glob(ls)
-for filename in hexlist:
-    print(filename)
-    raw = open(filename).readlines()
-    for n,line in enumerate(raw):
-        raw[n]=line.rstrip()
-        raw[n]=raw[n].replace(" ", "")
-    raw = ''.join(raw)
-    raw = raw.replace("0x", "")
-    raw = raw.replace(",", "")
-    bin = hexdump(raw)
-    if not (bin == 'ERR'):
-        base = os.path.basename(filename)
-        binout = pastes_dir + os.path.splitext(base)[0] + '.exe'
-        write_file(bin, binout)
-        os.remove(filename)
+        with open(filename, 'rb') as f:
+            raw = f.read()a
 
-ls = pastes_dir + '*.hexbase'
-hexblist = glob.glob(ls)
-for filename in hexblist:
-    print(filename)
-    raw = open(filename).readlines()
-    for n,line in enumerate(raw):
-        raw[n]=line.rstrip()
-        raw[n]=raw[n].replace(" ", "")
-        raw[n]=raw[n].replace("#", "A")
-    raw = ''.join(raw)
-    bin = hexdump(raw)
-    if not (bin == 'ERR'):
-        bin = basedump(bin)
-    if not (bin == 'ERR'):
-        base = os.path.basename(filename)
-        binout = pastes_dir + os.path.splitext(base)[0] + '.exe'
-        write_file(bin, binout)
-        os.remove(filename)
+        bin = decoder_function(raw)
 
-ls = pastes_dir + '*.dec'
-declist = glob.glob(ls)
-for filename in declist:
-    print(filename)
-    raw = open(filename).readlines()
-    for n,line in enumerate(raw):
-        raw[n]=line.rstrip()
-    raw = ''.join(raw)
-    bin = decdump(raw)
-    if not (bin == 'ERR'):
-        base = os.path.basename(filename)
-        binout = pastes_dir + os.path.splitext(base)[0] + '.exe'
-        write_file(bin, binout)
-        os.remove(filename)
-
-ls = pastes_dir + '*.basegzip'
-baselist = glob.glob(ls)
-for filename in baselist:
-    print(filename)
-    raw = open(filename).readlines()
-    for n,line in enumerate(raw):
-        raw[n]=line.rstrip()
-    raw = ''.join(raw)
-    bin = gz64dump(raw)
-    if not (bin == 'ERR'):
-        base = os.path.basename(filename)
-        binout = pastes_dir + os.path.splitext(base)[0] + '.exe'
-        write_file(bin, binout)
-        os.remove(filename)
-
-ls = pastes_dir + '*.basethreetwelve'
-base312list = glob.glob(ls)
-for filename in base312list:
-    print(filename)
-    raw = open(filename).readlines()
-    for n,line in enumerate(raw):
-        raw[n]=line.rstrip()
-    raw = ''.join(raw)
-    raw = raw.replace(",", " ")
-    bin = base312dump(raw)
-    if not (bin == 'ERR'):
-        base = os.path.basename(filename)
-        binout = pastes_dir + os.path.splitext(base)[0] + '.exe'
-        write_file(bin, binout)
-        os.remove(filename)
+        if not (bin == 'ERR'):
+            base = os.path.basename(filename)
+            binout = pastes_dir + os.path.splitext(base)[0] + '.exe'
+            write_file(bin, binout)
+            os.remove(filename)
