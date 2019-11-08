@@ -34,7 +34,7 @@ def decdump(infile):
             for byte in elements:
                 decimal = int(byte, 10)
                 frame.append(decimal)
-            bin = str(frame).encode()
+            bin = bytes(frame)
             return bin
         except:
             print("Error decoding decimal")
@@ -49,7 +49,7 @@ def decdump(infile):
             for byte in elements:
                 decimal = int(byte, 10)
                 frame.append(decimal)
-            bin = str(frame).encode()
+            bin = bytes(frame)
             return bin
         except:
             print("Error decoding decimal")
