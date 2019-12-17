@@ -39,13 +39,14 @@ def posh_find(text):
     # make term searches case insensitive
     txtlower = text.lower()
     posh_search_terms = ['/c"powershell', '/c powershell', 'powershell -',
-                         'powershell /', 'powershell.exe -', '\1.0\powershell.exe',
-                         '\\1.0\\powershell.exe', '-runas32', '::createthread',
-                         ' -bxor', '[system.convert]::', 'frombase64string(',
+                         'powershell /', 'powershell.exe -',
+                         '\1.0\powershell.exe', '\\1.0\\powershell.exe',
+                         '-runas32', '::createthread', ' -bxor', '_-bxor',
+                         '[system.convert]::', 'frombase64string(',
                          'new-object system.io.', '[system.net.',
                          'system.reflection.assemblyname',
                          'x509enrollment.cbinaryconverter',
-                         'convertto-securestring']
+                         'convertto-securestring', 'iex(', '|iex']
     for term in posh_search_terms:
         if term in txtlower:
             return True
