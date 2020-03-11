@@ -23,10 +23,16 @@ base64_charset = ['+', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
                   'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
                   'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v',
                   'w', 'x', 'y', 'z']
+base32_charset = ['2', '3', '4', '5', '6', '7', 'A', 'B', 'C', 'D', 'E', 'F',
+                  'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R',
+                  'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 hex_charset = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b',
                'c', 'd', 'e', 'f']
 bin_charset = ['0', '1']
 dec_charset = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+spooky_powershell_charset = [' ', '!', '"', '#', '$', '%', '&', "'", '(', ')',
+                             '+', '-', '.', '/', ';', '=', '?', '@', '[', ']',
+                             '`', '{', '|', '}', '~']
 drop_list1 = [' ', ',']
 drop_list2 = ['\\', 'x', ' ', ',']
 
@@ -39,12 +45,12 @@ def posh_find(text):
     # make term searches case insensitive
     txtlower = text.lower()
     posh_search_terms = ['/c"powershell', '/c powershell', 'powershell -',
-                         'powershell /', 'powershell.exe -',
+                         'powershell /', 'powershell.exe -', 'powershell  -',
                          '\1.0\powershell.exe', '\\1.0\\powershell.exe',
                          '-runas32', '::createthread', ' -bxor', '_-bxor',
                          '[system.convert]::', 'frombase64string(',
                          'new-object system.io.', '[system.net.',
-                         'system.reflection.assemblyname',
+                         'system.reflection.assemblyname', 'powershell.exe  -',
                          'x509enrollment.cbinaryconverter',
                          'convertto-securestring', 'iex(', '|iex']
     for term in posh_search_terms:
@@ -89,7 +95,10 @@ def posh_find(text):
                          'vAG52AGVyAHRUAG8tAFNlAGN1AHJlAFN0AHJpAG',
                          'bwBudgBlcgB0VABvLQBTZQBjdQByZQBTdAByaQB', 'IC1ieG9y',
                          'AtYnhvcg', 'LWJ4b3I', 'IC0AYngAb3', 'tAGJ4AG9y',
-                         'LQBieABvc']
+                         'LQBieABvc', 'uSW52b2tl', 'JbnZva2Uo', 'kludm9rZS',
+                         'W50UHRyXTo', 'ludFB0cl06', 'JbnRQdHJdO',
+                         'QBuAHQAUAB0AHIAXQA6AD', 'kAbgB0AFAAdAByAF0AOgA',
+                         'JAG4AdABQAHQAcgBdADoA']
     for term in posh_base64_terms:
         if term in text:
             return True
@@ -370,7 +379,7 @@ def gzencode_find(text):
     gzencode_search_terms = ['7b0HYBxJliUmL2', 'cG93ZXJzaGVsbC',
                              'UG93ZXJTaGVsbC', 'tL0HfFzFET/+7t',
                              '7XwJdFxXkWi9pd', '7XsLdBzVleCtqu',
-                             '7b15fBzFsTheM7']
+                             '7b15fBzFsTheM7', '7XwLeFxnceic15']
     for term in gzencode_search_terms:
         if term in text:
             return True
@@ -405,6 +414,9 @@ def basebash_find(text):
 
 def checkCharset(filebytes):
     file_charset = sorted(set(filebytes))
+    if file_charset == spooky_powershell_charset:
+        perfect_matchj = 'posh'
+        return perfect_match
     if '=' in file_charset:
         file_charset.remove('=')
     if file_charset == base64_charset:
@@ -425,6 +437,11 @@ def checkCharset(filebytes):
             file_charset.remove(a)
     if file_charset == hex_charset:
         perfect_match = 'hex'
+        return perfect_match
+    if '=' in file_charset:
+        file_charset.remove('=')
+    if file_charset == base32_charset:
+        perfect_match = 'base32'
         return perfect_match
     else:
         perfect_match = 'None'
@@ -456,21 +473,22 @@ def save_raw(text, key):
         return
 
 
-# search functions in order of execution, can be used for performance tuning
+# The line below would be a more elegant way to build a function list,
+# but it doesn't work and you can't control order for performance
+# find_functions = [f for f in dir() if f[0] is not '_' and f.endswith('_find')]
+
 find_functions = [base64_find, basebash_find, gzencode_find, basegzip_find,
                   basebin_find, basehex_find, baserot_find, bin_find,
                   basethreetwelve_find, dec_find, doublebase_find,
                   doublewidebase_find, exe_find, gzencode_find, hexbase_find,
                   hexbin_find, posh_find, hex_find]
-
 params = {'limit': limit}
 r = requests.get(url_pastebin_scraping, params)
 try:
     response = r.json()
 except ValueError:
-    print('ERROR: JSON ValueError, raw response from ' + url_pastebin_scraping + ': ' + r.content)
-    sys.exit(1)
-
+    print('ERROR: JSON ValueError, raw response from ' + url_pastebin_scraping + ': ' + str(r.content))
+    sys.exit(2)
 logfile = open(logfile, 'a+')
 counter = 0
 byte_counter = 0
@@ -482,9 +500,7 @@ for paste in response:
     key = paste["key"]
     date = paste["date"]
     size = int(paste["size"])
-
     if not os.path.exists(originals_dir + key):
-
         if any(user.lower() == username.lower() for username in userlist):
             url = paste["scrape_url"]
             r = requests.get(url)
@@ -503,7 +519,6 @@ for paste in response:
             jlo = json.dumps(logentry)
             logfile.write(jlo + '\n')
             break
-
         if (size > min_size):
             counter += 1
             byte_counter += size
@@ -511,9 +526,7 @@ for paste in response:
             r = requests.get(url)
             forward_text = r.content
             reverse_text = forward_text[::-1]
-
             for fn in find_functions:
-
                 if fn(str(forward_text)):
                     detect_type = str(fn).split('_')[0].split(' ')[1]
                     save_file(forward_text, detect_type, key)
@@ -530,7 +543,6 @@ for paste in response:
                     jlo = json.dumps(logentry)
                     logfile.write(jlo + '\n')
                     break
-
                 if fn(str(reverse_text)):
                     detect_type = str(fn).split('_')[0].split(' ')[1]
                     save_file(reverse_text, detect_type, key)
@@ -547,9 +559,7 @@ for paste in response:
                     jlo = json.dumps(logentry)
                     logfile.write(jlo + '\n')
                     break
-
-                match = checkCharset(forward_text.decode())
-
+                match = checkCharset(forward_text.decode('ISO-8859-1'))
                 if match != 'None':
                     detect_type = match
                     save_file(forward_text, detect_type, key)

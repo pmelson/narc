@@ -119,6 +119,7 @@ def hexdump(infile):
         text += line.rstrip()
     text = text.replace("0x", "")
     text = text.replace(",", "")
+    text = text.replace(" ","")
     if HEX_REGEX.search(text):
         print("hex matched")
         match = HEX_REGEX.search(text)
@@ -164,15 +165,14 @@ def gz64dump(infile):
     if GZ64_REGEX.search(text):
         print("basegzip matched")
         match = GZ64_REGEX.search(text)
-        frame = bytearray()
         try:
-            for a in base64.b64decode(text):
-                frame.append(a)
+            decodedbytes = base64.b64decode(match.group(0))
         except:
             print("Error decoding base64")
             bin = "ERR"
+            return bin
         try:
-            bin = zlib.decompress(bytes(frame), 15+32)
+            bin = zlib.decompress(bytes(decodedbytes), 15+32)
         except zlib.error:
             print("Error decompressing")
             bin = "ERR"
@@ -259,15 +259,11 @@ for decoder in decoding_tuples:
     extension = decoder[0]
     decoder_function = decoder[1]
     files_list = glob.glob(pastes_dir + '*.' + extension)
-
     for filename in files_list:
         print(filename)
-
         with open(filename, 'rb') as f:
-            raw = f.read()a
-
+            raw = f.read()
         bin = decoder_function(raw)
-
         if not (bin == 'ERR'):
             base = os.path.basename(filename)
             binout = pastes_dir + os.path.splitext(base)[0] + '.exe'

@@ -88,6 +88,9 @@ rule posh_find {
     $posh_base64_term62 = "IC0AYngAb3"
     $posh_base64_term63 = "tAGJ4AG9y"
     $posh_base64_term64 = "LQBieABvc"
+    $posh_base64_term65 = "kludm9rZS"
+    $posh_base64_term66 = "uSW52b2tl"
+    $posh_base64_term67 = "JbnZva2Uo"
   condition:
     any of them
 }
