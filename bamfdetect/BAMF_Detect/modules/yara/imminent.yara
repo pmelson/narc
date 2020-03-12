@@ -1,4 +1,7 @@
 rule new_imminent {
+  meta:
+    description = "Imminent Monitor RAT"
+    author = "Paul Melson @pmelson"
   strings:
     $ = "Connecting to {0}:{1}..." wide
     $ = "\\Imminent\\Plugins\\" wide
