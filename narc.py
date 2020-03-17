@@ -124,6 +124,13 @@ def getipinfo(ipaddr):
 
 
 def recordc2(c2):
+    logentry = {
+        'paste':paste,
+        'hash':sha256hash,
+        'type':malwaretype,
+        'c2': c2
+    }
+    logentry['c2s'] = []
     for a in c2.split(','):
         try:
             ipaddr = IPV4_REGEX.search(a).group(0)
@@ -149,11 +156,7 @@ def recordc2(c2):
                     postal = "err"
         if ipaddr != "err" and isip(ipaddr):
             loc,city,region,hostname,country,org,postal = getipinfo(ipaddr)
-            logentry = {
-                'paste':paste,
-                'hash':sha256hash,
-                'type':type,
-                'c2':c2,
+            c2info = {
                 'fqdn':fqdn,
                 'ipaddr':ipaddr,
                 'loc':loc,
@@ -164,11 +167,10 @@ def recordc2(c2):
                 'org':org,
                 'postal':postal
             }
-            jlo = json.dumps(logentry, ensure_ascii=False)
-            with open(logfile, 'a+') as f:
-                f.write(jlo + '\n')
-        else:
-            print("Error: RFC1918 or unparsed IP address (" + ipaddr + ")")
+            logentry['c2s'].append(c2info)
+    jlo = json.dumps(logentry, ensure_ascii=False)
+    with open(logfile, 'a+') as f:
+        f.write(jlo + '\n')
 
 
 ls = pastes_dir + '*.exe'
@@ -177,25 +179,25 @@ for filename in exelist:
     base = os.path.basename(filename)
     paste = os.path.splitext(base)[0]
     sha256hash = filehash(filename)
-    type,c2 = BAMFrun(filename)
+    malwaretype,c2 = BAMFrun(filename)
     stored_file = done_dir + base + "_" + sha256hash
     stored_file = done_dir + base + "_" + sha256hash
-    if not os.path.isfile(stored_file) and not (type == 'None'):
+    if not os.path.isfile(stored_file) and not (malwaretype == 'None'):
         vt_upload(filename)
         time.sleep(15)
-        comment = type + " found at https://pastebin.com/raw/" + paste + " SHA256: " + sha256hash + " C2: " + c2
+        comment = malwaretype + " found at https://pastebin.com/raw/" + paste + " SHA256: " + sha256hash + " C2: " + c2
         if len(comment) > 500:
             comment = comment[:500]
         vt_comment(comment,sha256hash)
         c2safe = c2.replace(".", "[.]")
-        message = '#' + type + " found at https://pastebin.com/raw/" + paste + " SHA256: " + sha256hash + " C2: " + c2safe
+        message = '#' + malwaretype + " found at https://pastebin.com/raw/" + paste + " SHA256: " + sha256hash + " C2: " + c2safe
         if len(message) > 280:
             message = message[:280]
         tweet(message)
         new_filename = stored_file
         os.rename(filename, new_filename)
         recordc2(c2)
-    elif (type == 'None') and not os.path.isfile(stored_file):
+    elif (malwaretype == 'None') and not os.path.isfile(stored_file):
         new_filename = rsrch_dir + base + "_" + sha256hash
         os.rename(filename, new_filename)
     else:
