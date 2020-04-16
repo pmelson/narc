@@ -10,8 +10,12 @@ url_pastebin_scraping = 'https://scrape.pastebin.com/api_scraping.php'
 limit = 250
 min_size = 1000
 pastes_dir = '/home/ubuntu/pastes/'  # Trailing slash is important here!
-originals_dir = '/home/ubuntu/pastes/origraw/'  # Trailing slash is important here!
+originals_dir = '/home/ubuntu/pastes/allpastes/'  # Trailing slash is important here!
 logfile = pastes_dir + 'pastes.json'
+allpastes = pastes_dir + 'allpastes.json'
+
+# compile regular expression for c2_find function
+C2_REGEX = re.compile('^[a-zA-Z0-9\.\-_]{7,100}:[0-9]{1,5}$')
 
 # compile regular expression for hex_find function
 HEX_PE = re.compile('4d[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}5a[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|41|45|50|80|90|e8)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|52)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|01|02|03|55|e8)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|48)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|04|89)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|5b|e5)')
@@ -412,6 +416,11 @@ def basebash_find(text):
             return True
 
 
+def c2_find(text):
+    if C2_REGEX.match(text):
+        return True
+
+
 def checkCharset(filebytes):
     file_charset = sorted(set(filebytes))
     if file_charset == spooky_powershell_charset:
@@ -421,6 +430,9 @@ def checkCharset(filebytes):
         file_charset.remove('=')
     if file_charset == base64_charset:
         perfect_match = 'base64'
+        return perfect_match
+    if file_charset == base32_charset:
+        perfect_match = 'base32'
         return perfect_match
     for a in drop_list1:
         if a in file_charset:
@@ -438,14 +450,67 @@ def checkCharset(filebytes):
     if file_charset == hex_charset:
         perfect_match = 'hex'
         return perfect_match
-    if '=' in file_charset:
-        file_charset.remove('=')
-    if file_charset == base32_charset:
-        perfect_match = 'base32'
+    if len(file_charset) > 15 and len(file_charset) < 20:
+        perfect_match = 'hex'
         return perfect_match
     else:
         perfect_match = 'None'
     return perfect_match
+
+
+# original detection logging function
+# only called when a detection match occurs
+def log_pastes(paste, detect_type):
+    scrape_url = paste["scrape_url"]
+    full_url = paste["full_url"]
+    title = paste["title"]
+    syntax = paste["syntax"]
+    expire = paste["expire"]
+    user = paste["user"]
+    key = paste["key"]
+    date = paste["date"]
+    size = int(paste["size"])
+    logentry = {
+        'paste':str(key),
+        'type':str(detect_type),
+        'title':str(title),
+        'user':str(user),
+        'syntax':str(syntax),
+        'date':str(date),
+        'expiration':str(expire)
+    }
+    jlo = json.dumps(logentry)
+    with open(logfile, 'a+') as f:
+        f.write(jlo + '\n')
+    return
+
+
+# new logging function that records all pastes seen on API
+def log_allpastes(paste):
+    scrape_url = paste["scrape_url"]
+    full_url = paste["full_url"]
+    title = paste["title"]
+    syntax = paste["syntax"]
+    expire = paste["expire"]
+    user = paste["user"]
+    key = paste["key"]
+    date = paste["date"]
+    size = int(paste["size"])
+    logentry = {
+        'key':str(key),
+        'title':str(title),
+        'user':str(user),
+        'syntax':str(syntax),
+        'size':str(size),
+        'scrape_url':str(scrape_url),
+        'full_url':str(full_url),
+        'date':str(date),
+        'expiration':str(expire)
+    }
+    jlo = json.dumps(logentry)
+    with open(allpastes, 'a+') as f:
+        f.write(jlo + '\n')
+    return
 
 
 def save_file(text, detect_type, key):
@@ -481,18 +546,21 @@ find_functions = [base64_find, basebash_find, gzencode_find, basegzip_find,
                   basebin_find, basehex_find, baserot_find, bin_find,
                   basethreetwelve_find, dec_find, doublebase_find,
                   doublewidebase_find, exe_find, gzencode_find, hexbase_find,
-                  hexbin_find, posh_find, hex_find]
+                  hexbin_find, posh_find, hex_find, c2_find]
+
 params = {'limit': limit}
 r = requests.get(url_pastebin_scraping, params)
 try:
     response = r.json()
 except ValueError:
-    print('ERROR: JSON ValueError, raw response from ' + url_pastebin_scraping + ': ' + str(r.content))
-    sys.exit(2)
-logfile = open(logfile, 'a+')
+    sys.exit(time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()) + ' ERROR: JSON ValueError, raw response from ' + url_pastebin_scraping + ': ' + str(r.content))
+
 counter = 0
 byte_counter = 0
+error_counter = 0
 for paste in response:
+    scrape_url = paste["scrape_url"]
+    full_url = paste["full_url"]
     title = paste["title"]
     syntax = paste["syntax"]
     expire = paste["expire"]
@@ -501,83 +569,55 @@ for paste in response:
     date = paste["date"]
     size = int(paste["size"])
     if not os.path.exists(originals_dir + key):
-        if any(user.lower() == username.lower() for username in userlist):
-            url = paste["scrape_url"]
-            r = requests.get(url)
-            detect_type = "user_" + user
-            save_file(r.content, detect_type, key)
-            save_raw(r.content, key)
-            logentry = {
-                'paste':str(key),
-                'type':str(detect_type),
-                'title':str(title),
-                'user':str(user),
-                'syntax':str(syntax),
-                'date':str(date),
-                'expiration':str(expire),
-            }
-            jlo = json.dumps(logentry)
-            logfile.write(jlo + '\n')
+        log_allpastes(paste)
+        r = requests.get(scrape_url)
+        counter += 1
+        byte_counter += size
+        if r.text == 'File is not ready for scraping yet. Try again in 1 minute.' or r.text == 'Please slow down, you are hitting our servers unnecessarily hard! No more than 1000 requests per 10 minutes. Please wait a few minutes before trying again.':
+            error_counter += 1
             break
+
+        fwd_paste = r.content
+        save_raw(fwd_paste, key)
+
+        if (size < 200):
+            if c2_find(str(fwd_paste)):
+                detect_type = 'c2'
+                save_file(fwd_paste, detect_type, key)
+                log_pastes(paste, detect_type)
+                break
+
+        if any(user.lower() == username.lower() for username in userlist):
+            detect_type = "user_" + user
+            save_file(fwd_paste, detect_type, key)
+            log_pastes(paste, detect_type)
+            break
+
         if (size > min_size):
-            counter += 1
-            byte_counter += size
-            url = paste["scrape_url"]
-            r = requests.get(url)
-            forward_text = r.content
-            reverse_text = forward_text[::-1]
+            rev_paste = fwd_paste[::-1]
             for fn in find_functions:
-                if fn(str(forward_text)):
+
+                if fn(str(fwd_paste)):
                     detect_type = str(fn).split('_')[0].split(' ')[1]
-                    save_file(forward_text, detect_type, key)
-                    save_raw(forward_text, key)
-                    logentry = {
-                        'paste':str(key),
-                        'type':str(detect_type),
-                        'title':str(title),
-                        'user':str(user),
-                        'syntax':str(syntax),
-                        'date':str(date),
-                        'expiration':str(expire)
-                    }
-                    jlo = json.dumps(logentry)
-                    logfile.write(jlo + '\n')
+                    save_file(fwd_paste, detect_type, key)
+                    log_pastes(paste, detect_type)
                     break
-                if fn(str(reverse_text)):
+
+                if fn(str(rev_paste)):
                     detect_type = str(fn).split('_')[0].split(' ')[1]
-                    save_file(reverse_text, detect_type, key)
-                    save_raw(forward_text, key)
-                    logentry = {
-                        'paste':str(key),
-                        'type':str(detect_type),
-                        'title':str(title),
-                        'user':str(user),
-                        'syntax':str(syntax),
-                        'date':str(date),
-                        'expiration':str(expire)
-                    }
-                    jlo = json.dumps(logentry)
-                    logfile.write(jlo + '\n')
+                    save_file(rev_paste, detect_type, key)
+                    log_pastes(paste, detect_type)
                     break
-                match = checkCharset(forward_text.decode('ISO-8859-1'))
-                if match != 'None':
-                    detect_type = match
-                    save_file(forward_text, detect_type, key)
-                    save_raw(forward_text, key)
-                    logentry = {
-                        'paste':str(key),
-                        'type':str(detect_type),
-                        'title':str(title),
-                        'user':str(user),
-                        'syntax':str(syntax),
-                        'date':str(date),
-                        'expiration':str(expire)
-                    }
-                    jlo = json.dumps(logentry)
-                    logfile.write(jlo + '\n')
-                    break
+
+            match = checkCharset(fwd_paste.decode('ISO-8859-1'))
+            if match != 'None':
+                detect_type = match
+                save_file(fwd_paste, detect_type, key)
+                log_pastes(paste, detect_type)
+                break
 
 end = time.time()
 print("documents read: " + str(counter))
 print("bytes scanned: " + str(byte_counter))
+print("paste download errors: " + str(error_counter))
 print("run time: " + str(end - start))
