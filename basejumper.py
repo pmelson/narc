@@ -9,8 +9,10 @@ import codecs
 
 mimetype = magic.Magic(mime=True)
 pastes_dir = '/home/ubuntu/pastes/'	 # trailing slash is IMPORTANT here
-BASE64_REGEX = re.compile('TV(oAAA|pBUl|pQAA|qAAA|qQAA|roAA|pFUu)[A-Za-z0-9/+]{112,}[\=]{0,2}')
+BASE64_REGEX = re.compile('TV(oAAA|pBUl|pQAA|qAAA|qQAA|roAA|pFUui|pAAA)[A-Za-z0-9/+]{112,}[\=]{0,2}')
 B64URLSAFE_REGEX = re.compile('TV(oAAA|pBUl|pQAA|qAAA|qQAA|roAA|pFUu)[A-Za-z0-9_-]{112,}[\=]{0,2}')
+DUBLBASE_REGEX = re.compile('VFZ(xUUFB|wUUFB|vQUFB|wQlVs|xQUFB|yb0FB)[A-Za-z0-9/+]{112,}[\=]{0,2}')
+DUBLSAFE_REGEX = re.compile('VFZ(xUUFB|wUUFB|vQUFB|wQlVs|xQUFB|yb0FB)[A-Za-z0-9_-]{112,}[\=]{0,2}')
 DECSP_REGEX = re.compile('77\ 90\ (144\ 0\ 3\ 0\ 4\ 0|232\ 0\ 0\ 0\ 0\ 91|144\ 0\ 3\ 0\ 0\ 0|80\ 0\ 2\ 0\ 0\ 0|0\ 0\ 0\ 0\ 0\ 0|65\ 82\ 85\ 72\ 137\ 229|128\ 0\ 1\ 0\ 0\ 0|144\ 0\ 3\ 0\ 4\ 0|232\ 0\ 0\ 0\ 0\ 91)[0-9\ ]{254,}')
 DECCM_REGEX = re.compile('77,90,(144,0,3,0,4,0|232,0,0,0,0,91|144,0,3,0,0,0|80,0,2,0,0,0|0,0,0,0,0,0|65,82,85,72,137,229|128,0,1,0,0,0|144,0,3,0,4,0|232,0,0,0,0,91)[0-9,]{254,}[0-9]{1}')
 HEX_REGEX = re.compile('4d5a(00000000|41525548|50000200|80000100|90000300|e8000000|4552e8000000)[a-f0-9]{254,}', re.IGNORECASE)
@@ -107,6 +109,76 @@ def basedump(infile):
             print("Error decoding urlsafe")
             bin = "ERR"
             return bin
+    else:
+        print("No base64 string found")
+        bin = "ERR"
+        return bin
+
+
+def doublebasedump(infile):
+    text = ''
+    for line in str(infile).splitlines():
+        text += line.rstrip()
+    if DUBLBASE_REGEX.search(text):
+        print("double base64 matched")
+        match = DUBLBASE_REGEX.search(text)
+        try:
+            step1 = base64.b64decode(match.group(0))
+            step1 = step1.decode()
+        except:
+            print("Error decoding base64")
+            bin = "ERR"
+            return bin
+        if BASE64_REGEX.search(step1):
+            print("base64 matched")
+            match = BASE64_REGEX.search(step1)
+            try:
+                bin = base64.b64decode(match.group(0))
+                return bin
+            except:
+                print("Error decoding base64")
+                bin = "ERR"
+                return bin
+        elif B64URLSAFE_REGEX.search(step1):
+            print("urlsafe matched")
+            match = B64URLSAFE_REGEX.search(step1)
+            try:
+                bin = base64.urlsafe_b64decode(match.group(0))
+                return bin
+            except:
+                print("Error decoding urlsafe")
+                bin = "ERR"
+                return bin
+    elif DUBLSAFE_REGEX.search(text):
+        print("double urlsafe matched")
+        match = DUBLSAFE_REGEX.search(text)
+        try:
+            step1 = base64.b64decode(match.group(0))
+            step1 = step1.decode()
+        except:
+            print("Error decoding urlsafe")
+            bin = "ERR"
+            return bin
+        if BASE64_REGEX.search(step1):
+            print("base64 matched")
+            match = BASE64_REGEX.search(step1)
+            try:
+                bin = base64.b64decode(match.group(0))
+                return bin
+            except:
+                print("Error decoding base64")
+                bin = "ERR"
+                return bin
+        elif B64URLSAFE_REGEX.search(step1):
+            print("urlsafe matched")
+            match = B64URLSAFE_REGEX.search(step1)
+            try:
+                bin = base64.urlsafe_b64decode(match.group(0))
+                return bin
+            except:
+                print("Error decoding urlsafe")
+                bin = "ERR"
+                return bin
     else:
         print("No base64 string found")
         bin = "ERR"
@@ -252,8 +324,9 @@ def write_file(data, filename):
 
 decoding_tuples = [('base64', basedump), ('basegzip', gz64dump),
                    ('basethreetwelve', base312dump), ('bin', bindump),
-                   ('dec', decdump), ('hex', hexdump),
-                   ('hexbase', hexbasedump), ('gzencode', gzencdump)]
+                   ('dec', decdump), ('doublebase', doublebasedump),
+                   ('hex', hexdump), ('hexbase', hexbasedump),
+                   ('gzencode', gzencdump)]
 
 for decoder in decoding_tuples:
     extension = decoder[0]
@@ -263,7 +336,8 @@ for decoder in decoding_tuples:
         print(filename)
         with open(filename, 'rb') as f:
             raw = f.read()
-        bin = decoder_function(raw)
+        infile = raw.decode()
+        bin = decoder_function(infile)
         if not (bin == 'ERR'):
             base = os.path.basename(filename)
             binout = pastes_dir + os.path.splitext(base)[0] + '.exe'

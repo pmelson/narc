@@ -8,7 +8,7 @@ import time
 start = time.time()
 url_pastebin_scraping = 'https://scrape.pastebin.com/api_scraping.php'
 limit = 250
-min_size = 1000
+min_size = 100
 pastes_dir = '/home/ubuntu/pastes/'  # Trailing slash is important here!
 originals_dir = '/home/ubuntu/pastes/allpastes/'  # Trailing slash is important here!
 logfile = pastes_dir + 'pastes.json'
@@ -19,6 +19,9 @@ C2_REGEX = re.compile('^[a-zA-Z0-9\.\-_]{7,100}:[0-9]{1,5}$')
 
 # compile regular expression for hex_find function
 HEX_PE = re.compile('4d[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}5a[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|41|45|50|80|90|e8)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|52)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|01|02|03|55|e8)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|48)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|04|89)[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}(00|5b|e5)')
+
+#compile regular expression for hexgz_find function
+HEX_GZ = re.compile('1f[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}8b[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}08[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}00[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}04[\ 0x\:\;&\{\}\|\*\.\/\$\^\-%,()!+<>\?#@]{1,5}00')
 
 # character lists for character set comparison checkCharset()
 base64_charset = ['+', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -56,7 +59,8 @@ def posh_find(text):
                          'new-object system.io.', '[system.net.',
                          'system.reflection.assemblyname', 'powershell.exe  -',
                          'x509enrollment.cbinaryconverter',
-                         'convertto-securestring', 'iex(', '|iex']
+                         'convertto-securestring', 'iex(', '|iex',
+                         'io.memorystream']
     for term in posh_search_terms:
         if term in txtlower:
             return True
@@ -137,6 +141,12 @@ def bin_find(text):
                         '010011010101101010000000000000000000000100000000',
                         '010011010101101010010000000000000000001100000000',
                         '010011010101101011101000000000000000000000000000',
+                        '01001101 0101101 00000000 00000000 00000000 000000000',
+                        '01001101 0101101 00101000 00000000 00000001 000000000',
+                        '01001101 0101101 00100000 10101001 00101010 101001000',
+                        '01001101 0101101 01000000 00000000 00000000 100000000',
+                        '01001101 0101101 01001000 00000000 00000001 100000000',
+                        '01001101 0101101 01110100 00000000 00000000 000000000',
                         '0100 1101 0101 1010 0000 0000 0000 0000 0000 0000 0000 0000',
                         '0100 1101 0101 1010 0100 0001 0101 0010 0101 0101 0100 1000',
                         '0100 1101 0101 1010 0101 0000 0000 0000 0000 0010 0000 0000',
@@ -160,8 +170,9 @@ def base64_find(text):
                            'TVoAAAAAAAAAAAAA', 'TVpBUlVIieVIgewg',
                            'TVqAAAEAAAAEABAA', 'TVroAAAAAFtSRVWJ',
                            'TVqQAAMABAAAAAAA', 'TVpBUlVIieVIgewgAAAA',
-                           'TVpFUugAAAAAW0iD', 'kJCQkE1aQVJVSInlSIHsIAAAA',
-                           'lzIHByb2dyY', 'pcyBwcm9ncm', 'aXMgcHJvZ3J']
+                           'TVpFUugAAAAAW0iD', 'TVpAAAEAAAACAAAA',
+                           'kJCQkE1aQVJVSInlSIHsIAAAA', 'lzIHByb2dyY',
+                           'pcyBwcm9ncm', 'aXMgcHJvZ3J']
     for term in base64_search_terms:
         if term in text:
             return True
@@ -221,6 +232,26 @@ def hex_find(text):
     # regex that handles all of the hex byte separations (see above)
     if HEX_PE.search(txtlower):
         return True
+
+
+def hexgz_find(text):
+    txtlower = text.lower()
+    hexgz_search_terms = ['1f8b0800000000000400',
+                          '1f 8b 08 00 00 00 00 00 04 00',
+                          '1f,8b,08,00,00,00,00,00,04,00']
+    for term in hexgz_search_terms:
+        if term in txtlower:
+            return True
+    if HEX_GZ.search(txtlower):
+        return True
+
+
+def decgz_find(text):
+    txtlower = text.lower()
+    decgz_search_terms = ['31,139,8,0,0,0,0,0,4,0', '31 139 8 0 0 0 0 0 4 0']
+    for term in decgz_search_terms:
+        if term in txtlower:
+            return True
 
 
 def hexbase_find(text):
@@ -410,8 +441,16 @@ def basebash_find(text):
     basebash_search_terms = ['IyEvYmluL2Jhc2', 'IyEvYmluL3No', 'L2Jpbi9iYXNo',
                              'L2Jpbi9za', 'IyEgL3Vzci9iaW4vZW52IHB5dGhvb',
                              'IyEvdXNyL2Jpbi9lbnYgcHl0aG9',
-                             'IyEvdXNyL2Jpbi9weXRob2']
+                             'IyEvdXNyL2Jpbi9weXRob2', 'mespace="System.Web']
     for term in basebash_search_terms:
+        if term in text:
+            return True
+
+
+def bella_find(text):
+    # base64 encoded '/dyld' to search for Bella or other OSX payloads
+    bella_search_terms = ['L2R5bG', '9keWxk', 'vZHlsZ', 'get_bella_']
+    for term in bella_search_terms:
         if term in text:
             return True
 
@@ -422,6 +461,7 @@ def c2_find(text):
 
 
 def checkCharset(filebytes):
+    # compare characters in file to known encode character sets & counts
     file_charset = sorted(set(filebytes))
     if file_charset == spooky_powershell_charset:
         perfect_matchj = 'posh'
@@ -458,9 +498,8 @@ def checkCharset(filebytes):
     return perfect_match
 
 
-# original detection logging function
-# only called when a detection match occurs
 def log_pastes(paste, detect_type):
+    # format original detection logging message as JSON and write to log file
     scrape_url = paste["scrape_url"]
     full_url = paste["full_url"]
     title = paste["title"]
@@ -485,8 +524,8 @@ def log_pastes(paste, detect_type):
     return
 
 
-# new logging function that records all pastes seen on API
 def log_allpastes(paste):
+    # format scraping API metadata as JSON and write to log file
     scrape_url = paste["scrape_url"]
     full_url = paste["full_url"]
     title = paste["title"]
@@ -514,6 +553,7 @@ def log_allpastes(paste):
 
 
 def save_file(text, detect_type, key):
+    # write matched paste file to disk with match type extension
     print('%s: %s' % (detect_type, key))
     outfile = pastes_dir + key + "." + detect_type
     if not os.path.exists(outfile):
@@ -527,6 +567,7 @@ def save_file(text, detect_type, key):
 
 
 def save_raw(text, key):
+    # save original to disk
     rawfile = originals_dir + key
     if not os.path.exists(rawfile):
         f = open(rawfile, 'wb')
@@ -542,11 +583,11 @@ def save_raw(text, key):
 # but it doesn't work and you can't control order for performance
 # find_functions = [f for f in dir() if f[0] is not '_' and f.endswith('_find')]
 
-find_functions = [base64_find, basebash_find, gzencode_find, basegzip_find,
-                  basebin_find, basehex_find, baserot_find, bin_find,
-                  basethreetwelve_find, dec_find, doublebase_find,
+find_functions = [base64_find, hex_find, dec_find, bin_find, basebash_find,
+                  gzencode_find, basegzip_find, basebin_find, basehex_find,
+                  baserot_find, bin_find, basethreetwelve_find, doublebase_find,
                   doublewidebase_find, exe_find, gzencode_find, hexbase_find,
-                  hexbin_find, posh_find, hex_find, c2_find]
+                  hexbin_find, posh_find, decgz_find, js_find, bella_find]
 
 params = {'limit': limit}
 r = requests.get(url_pastebin_scraping, params)
@@ -573,9 +614,19 @@ for paste in response:
         r = requests.get(scrape_url)
         counter += 1
         byte_counter += size
-        if r.text == 'File is not ready for scraping yet. Try again in 1 minute.' or r.text == 'Please slow down, you are hitting our servers unnecessarily hard! No more than 1000 requests per 10 minutes. Please wait a few minutes before trying again.':
+        # check for HTTP error codes & common API error messages and fall back
+        # to the raw URL
+        if r.status_code != 200 or r.text == 'File is not ready for scraping yet. Try again in 1 minute.' \
+        or r.text == 'Please slow down, you are hitting our servers unnecessarily hard! No more than 1000 requests per 10 minutes. Please wait a few minutes before trying again.' \
+        or r.text == '<html>\r\n<head><title>429 Too Many Requests</title></head>\r\n<body>\r\n<center><h1>429 Too Many Requests</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n':
+            backup_url = 'https://pastebin.com/raw/' + key
+            r = requests.get(backup_url)
             error_counter += 1
-            break
+            if r.status_code != 200 or r.text == 'File is not ready for scraping yet. Try again in 1 minute.' \
+            or r.text == 'Please slow down, you are hitting our servers unnecessarily hard! No more than 1000 requests per 10 minutes. Please wait a few minutes before trying again.' \
+            or r.text == '<html>\r\n<head><title>429 Too Many Requests</title></head>\r\n<body>\r\n<center><h1>429 Too Many Requests</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n':
+                error_counter += 1
+                break
 
         fwd_paste = r.content
         save_raw(fwd_paste, key)
